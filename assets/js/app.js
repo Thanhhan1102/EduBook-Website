@@ -15,16 +15,25 @@ const initialParams = new URLSearchParams(window.location.search);
 if (initialParams.get('mode') === 'rent') state.mode = 'rent';
 if (initialParams.get('query')) state.query = initialParams.get('query');
 if (['CNTT', 'Kế toán', 'Đại cương', 'Điện – Điện tử', 'Quản trị kinh doanh', 'Cơ khí', 'Hóa học', 'Công nghệ may', 'Ngôn ngữ Anh'].includes(initialParams.get('faculty'))) state.faculty = initialParams.get('faculty');
+
 const el = (selector) => document.querySelector(selector);
 const formatMoney = (amount) => `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
 const bookGrid = el('#bookGrid');
 const modal = el('#bookModal');
+const orderModal = el('#orderModal');
 const cartDrawer = el('#cartDrawer');
 const backdrop = el('#backdrop');
 let modalMode = 'buy';
 let toastTimer;
 let authRedirectTimer;
 const facultyLabels = { all: 'Tất cả khoa', CNTT: 'Công nghệ thông tin', 'Kế toán': 'Kế toán', 'Đại cương': 'Đại cương', 'Điện – Điện tử': 'Điện – Điện tử', 'Quản trị kinh doanh': 'Quản trị kinh doanh', 'Cơ khí': 'Cơ khí', 'Hóa học': 'Hóa học', 'Công nghệ may': 'Công nghệ may', 'Ngôn ngữ Anh': 'Ngôn ngữ Anh' };
+const conditionLabels = { new: 'Mới 100%', over80: 'Độ mới trên 80%', over60: 'Độ mới trên 60%', pass: 'Độ mới trên 80%' };
+
+const getCondition = (book) => book.condition === 'pass' ? 'over80' : (conditionLabels[book.condition] ? book.condition : 'new');
+const conditionLabel = (book) => conditionLabels[getCondition(book)];
+const getStock = (book) => Math.max(0, Number.isFinite(Number(book.stock)) ? Number(book.stock) : 10);
+const getCartItems = () => state.cart.map((item) => ({ ...item, book: books.find((book) => book.id === item.id) })).filter((item) => item.book);
+const getCartTotal = () => getCartItems().reduce((sum, item) => sum + (item.mode === 'rent' ? item.book.rent : item.book.price) * item.quantity, 0);
 
 function setFacultyPicker(value) {
   const trigger = el('#facultySelect');
@@ -32,9 +41,7 @@ function setFacultyPicker(value) {
   const selected = facultyLabels[value] ? value : 'all';
   trigger.dataset.value = selected;
   el('#facultySelected').textContent = facultyLabels[selected];
-  document.querySelectorAll('[data-faculty-option]').forEach((option) => {
-    option.setAttribute('aria-selected', String(option.dataset.facultyOption === selected));
-  });
+  document.querySelectorAll('[data-faculty-option]').forEach((option) => option.setAttribute('aria-selected', String(option.dataset.facultyOption === selected)));
 }
 
 function getVisibleBooks() {
@@ -44,7 +51,7 @@ function getVisibleBooks() {
     const searchable = normal(`${book.title} ${book.code} ${book.author} ${book.faculty}`);
     return (!query || searchable.includes(query)) &&
       (state.faculty === 'all' || book.faculty === state.faculty) &&
-      (state.condition === 'all' || book.condition === state.condition);
+      (state.condition === 'all' || getCondition(book) === state.condition);
   });
   return filtered.sort((a, b) => {
     const key = state.mode === 'rent' ? 'rent' : 'price';
@@ -59,7 +66,7 @@ function renderBooks() {
   const isRent = state.mode === 'rent';
   el('#catalogDescription').textContent = isRent
     ? 'Thuê giáo trình trong một học kỳ, tiết kiệm đến 70% và hoàn cọc tự động.'
-    : 'Giáo trình mới và sách pass được kiểm tra trước khi nhận tại thư viện.';
+    : 'Giáo trình được kiểm tra độ mới và tồn kho trước khi nhận tại Nhà sách EduBook.';
   el('#resultsText').textContent = `${currentBooks.length} giáo trình ${isRent ? 'cho thuê' : 'đang có sẵn'}`;
   el('#emptyState').hidden = currentBooks.length !== 0;
   bookGrid.hidden = currentBooks.length === 0;
@@ -67,10 +74,11 @@ function renderBooks() {
     const price = isRent ? book.rent : book.price;
     const saved = state.favorites.has(book.id);
     const discount = Math.round((1 - book.price / book.oldPrice) * 100);
-    const badge = book.condition === 'new' ? 'Mới 100%' : 'Pass 95%';
+    const condition = getCondition(book);
+    const stock = getStock(book);
     return `<article class="book-card">
-      <div class="book-image"><button class="image-detail-target" type="button" data-detail="${book.id}" aria-label="Xem chi tiết ${book.title}"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" loading="lazy" /><span class="book-badge ${book.condition === 'new' ? 'badge-new' : 'badge-pass'}">${badge}</span></button><button class="favorite ${saved ? 'saved' : ''}" data-favorite="${book.id}" type="button" aria-label="${saved ? 'Bỏ lưu' : 'Lưu'} ${book.title}">${saved ? '♥' : '♡'}</button></div>
-      <div class="book-body"><div class="book-meta"><strong>${book.faculty}</strong><span>${book.code}</span></div><h3><button class="book-title-button" type="button" data-detail="${book.id}">${book.title}</button></h3><p class="book-author">${book.author}</p><div class="price-row"><div><span class="price">${formatMoney(price)}</span><small>${isRent ? ' / kỳ' : ''}</small>${!isRent ? `<span class="old-price">${formatMoney(book.oldPrice)}</span>` : ''}</div>${!isRent ? `<span class="discount">-${discount}%</span>` : `<span class="discount">Tiết kiệm</span>`}</div><div class="card-actions"><button class="add-button" type="button" data-add="${book.id}">${isRent ? 'Thuê sách' : 'Mua ngay'}</button><button class="details-button" type="button" data-detail="${book.id}">Chi tiết</button></div></div>
+      <div class="book-image"><button class="image-detail-target" type="button" data-detail="${book.id}" aria-label="Xem chi tiết ${book.title}"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" loading="lazy" /><span class="book-badge badge-${condition}">${conditionLabel(book)}</span></button><button class="favorite ${saved ? 'saved' : ''}" data-favorite="${book.id}" type="button" aria-label="${saved ? 'Bỏ lưu' : 'Lưu'} ${book.title}">${saved ? '♥' : '♡'}</button></div>
+      <div class="book-body"><div class="book-meta"><strong>${book.faculty}</strong><span>${book.code}</span></div><h3><button class="book-title-button" type="button" data-detail="${book.id}">${book.title}</button></h3><p class="book-author">${book.author}</p><p class="stock-line ${stock ? '' : 'out-of-stock'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</p><div class="price-row"><div><span class="price">${formatMoney(price)}</span><small>${isRent ? ' / kỳ' : ''}</small>${!isRent ? `<span class="old-price">${formatMoney(book.oldPrice)}</span>` : ''}</div>${!isRent ? `<span class="discount">-${discount}%</span>` : `<span class="discount">Tiết kiệm</span>`}</div><div class="card-actions"><button class="add-button" type="button" data-add="${book.id}" ${stock ? '' : 'disabled'}>${isRent ? 'Thuê sách' : 'Mua ngay'}</button><button class="details-button" type="button" data-detail="${book.id}">Chi tiết</button></div></div>
     </article>`;
   }).join('');
   window.observeReveal?.(bookGrid.querySelectorAll('.book-card'));
@@ -96,7 +104,8 @@ function openBook(id, mode = state.mode) {
 function renderModal(book) {
   const rent = modalMode === 'rent';
   const price = rent ? book.rent : book.price;
-  el('#modalContent').innerHTML = `<div class="modal-layout"><div class="modal-cover"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" /></div><div class="modal-info"><p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${book.faculty} · ${book.code}</p><h2>${book.title}</h2><p class="author">${book.author}</p><div class="modal-rating"><strong>★ 4.9 / 5.0</strong><span>184 sinh viên đã dùng học liệu này</span></div><div class="mode-picker"><button class="${!rent ? 'active' : ''}" type="button" data-modal-mode="buy">▣ Mua sở hữu</button><button class="${rent ? 'active' : ''}" type="button" data-modal-mode="rent">↻ Thuê 1 học kỳ</button></div><div class="price-panel"><small>${rent ? 'Phí thuê 4 tháng · hoàn cọc tự động' : 'Giá trợ giá cho sinh viên IUH'}</small><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Đặt cọc 0đ qua xác thực SSO</small>'}</div><p class="book-description">${book.description}</p><ul class="modal-benefits"><li>Đúng đề cương CNTT 2024–2025</li><li>Nhận sách tại Thư viện Nhà A hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul><button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${book.id}">${rent ? 'Thuê sách ngay' : 'Thêm vào giỏ'} <span>→</span></button></div></div>`;
+  const stock = getStock(book);
+  el('#modalContent').innerHTML = `<div class="modal-layout"><div class="modal-cover"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" /></div><div class="modal-info"><p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${book.faculty} · ${book.code}</p><h2>${book.title}</h2><p class="author">${book.author}</p><div class="modal-rating"><strong>★ 4.9 / 5.0</strong><span>184 sinh viên đã dùng học liệu này</span></div><div class="book-specs"><div><span>Độ mới sách</span><strong>${conditionLabel(book)}</strong></div><div><span>Tồn kho</span><strong class="${stock ? 'stock-available' : 'stock-unavailable'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</strong></div></div><div class="mode-picker"><button class="${!rent ? 'active' : ''}" type="button" data-modal-mode="buy">▣ Mua sở hữu</button><button class="${rent ? 'active' : ''}" type="button" data-modal-mode="rent">↻ Thuê 1 học kỳ</button></div><div class="price-panel"><small>${rent ? 'Phí thuê 4 tháng · hoàn cọc tự động' : 'Giá trợ giá cho sinh viên IUH'}</small><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Đặt cọc 0đ qua xác thực SSO</small>'}</div><p class="book-description">${book.description}</p><ul class="modal-benefits"><li>Đúng đề cương CNTT 2024–2025</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul><button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${book.id}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button></div></div>`;
 }
 
 function requireTransaction() {
@@ -112,6 +121,10 @@ function addToCart(id, mode = state.mode) {
   const book = books.find((item) => item.id === id);
   if (!book) return;
   const existing = state.cart.find((entry) => entry.id === id && entry.mode === mode);
+  if (getStock(book) <= (existing?.quantity || 0)) {
+    showToast(`Tồn kho không đủ cho “${book.title}”.`);
+    return;
+  }
   if (existing) existing.quantity += 1;
   else state.cart.push({ id, mode, quantity: 1 });
   renderCart();
@@ -121,10 +134,9 @@ function addToCart(id, mode = state.mode) {
 function renderCart() {
   const count = state.cart.reduce((total, item) => total + item.quantity, 0);
   el('#cartCount').textContent = count;
-  const items = state.cart.map((item) => ({ ...item, book: books.find((book) => book.id === item.id) }));
-  el('#cartItems').innerHTML = items.length ? items.map(({ book, mode, quantity }) => `<div class="cart-item"><img src="${book.image}" alt="" /><div><strong>${book.title}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity}</small><strong>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</strong></div><button class="remove-cart" type="button" data-remove="${book.id}" data-remove-mode="${mode}" aria-label="Xóa ${book.title}">×</button></div>`).join('') : '<p class="cart-empty">Giỏ giáo trình của bạn đang trống.</p>';
-  const total = items.reduce((sum, item) => sum + (item.mode === 'rent' ? item.book.rent : item.book.price) * item.quantity, 0);
-  el('#cartTotal').textContent = formatMoney(total);
+  const items = getCartItems();
+  el('#cartItems').innerHTML = items.length ? items.map(({ book, mode, quantity }) => `<div class="cart-item"><img src="${book.image}" alt="" /><div><strong>${book.title}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity} · còn ${getStock(book)} cuốn</small><strong>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</strong></div><button class="remove-cart" type="button" data-remove="${book.id}" data-remove-mode="${mode}" aria-label="Xóa ${book.title}">×</button></div>`).join('') : '<p class="cart-empty">Giỏ giáo trình của bạn đang trống.</p>';
+  el('#cartTotal').textContent = formatMoney(getCartTotal());
 }
 
 function toggleCart(open) {
@@ -132,6 +144,42 @@ function toggleCart(open) {
   cartDrawer.setAttribute('aria-hidden', String(!open));
   backdrop.hidden = !open;
   document.body.style.overflow = open ? 'hidden' : '';
+}
+
+function openOrderModal() {
+  if (!requireTransaction()) return;
+  const items = getCartItems();
+  if (!items.length) {
+    showToast('Hãy thêm giáo trình vào giỏ trước nhé.');
+    return;
+  }
+  const session = window.eduAuth.getSession();
+  const total = getCartTotal();
+  const deposit = Math.ceil(total * 0.2 / 1000) * 1000;
+  el('#orderItemCount').textContent = `${items.reduce((sum, item) => sum + item.quantity, 0)} cuốn`;
+  el('#orderSummaryItems').innerHTML = items.map(({ book, mode, quantity }) => `<div class="order-item"><img src="${book.image}" alt="" /><div><strong>${book.title}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity}</small></div><span>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</span></div>`).join('');
+  el('#orderTotal').textContent = formatMoney(total);
+  el('#orderDeposit').textContent = formatMoney(deposit);
+  el('#orderName').value = session.name || '';
+  el('#orderStudentId').value = session.studentId || session.staffId || '';
+  el('#orderEmail').value = session.email || '';
+  el('#orderPhone').value = session.phone && session.phone !== 'Chưa cập nhật' ? session.phone : '';
+  toggleCart(false);
+  orderModal.showModal();
+}
+
+function completeOrder() {
+  const reserved = new Map();
+  state.cart.forEach((item) => reserved.set(item.id, (reserved.get(item.id) || 0) + item.quantity));
+  books.forEach((book) => {
+    if (reserved.has(book.id)) book.stock = Math.max(0, getStock(book) - reserved.get(book.id));
+  });
+  window.eduBookStore?.saveBooks?.(books);
+  state.cart = [];
+  renderCart();
+  renderBooks();
+  orderModal.close();
+  showToast('Đã gửi yêu cầu đặt sách. Nhà sách EduBook sẽ xác nhận trong giờ làm việc.');
 }
 
 function showToast(message) {
@@ -181,23 +229,23 @@ document.addEventListener('click', (event) => {
   if (target.dataset.detail) openBook(target.dataset.detail);
   if (target.dataset.modalMode) { const title = el('.modal-info h2')?.textContent; const book = books.find((item) => item.title === title); if (book) { modalMode = target.dataset.modalMode; renderModal(book); } }
   if (target.dataset.modalAdd) { addToCart(target.dataset.modalAdd, modalMode); modal.close(); }
-  if (target.matches('.modal-close')) modal.close();
+  if (target.matches('.modal-close') && !target.dataset.closeOrder) modal.close();
+  if (target.dataset.closeOrder !== undefined) orderModal.close();
   if (target.matches('.cart-button')) toggleCart(true);
   if (target.dataset.closeCart !== undefined || target === backdrop) toggleCart(false);
   if (target.dataset.remove) { state.cart = state.cart.filter((item) => !(item.id === target.dataset.remove && item.mode === target.dataset.removeMode)); renderCart(); }
-  if (target.id === 'resetFilters') { state.query = ''; state.faculty = 'all'; state.condition = 'all'; el('#searchInput').value = ''; setFacultyPicker('all'); document.querySelectorAll('.chip').forEach((button) => button.classList.toggle('active', button.dataset.filter === 'all' || button.dataset.faculty === 'all')); renderBooks(); }
-  if (target.id === 'checkoutButton') {
-    if (!requireTransaction()) return;
-    showToast(state.cart.length ? 'Demo: yêu cầu đặt sách đã được ghi nhận.' : 'Hãy thêm giáo trình vào giỏ trước nhé.');
-  }
+  if (target.id === 'resetFilters') { state.query = ''; state.faculty = 'all'; state.condition = 'all'; el('#searchInput').value = ''; setFacultyPicker('all'); document.querySelectorAll('.chip').forEach((button) => button.classList.toggle('active', button.dataset.filter === 'all')); renderBooks(); }
+  if (target.id === 'checkoutButton') openOrderModal();
 });
 
 el('#sortSelect').addEventListener('change', (event) => { state.sort = event.target.value; renderBooks(); });
+el('#orderForm').addEventListener('submit', (event) => { event.preventDefault(); completeOrder(); });
 document.addEventListener('click', (event) => {
   if (!event.target.closest('.faculty-picker')) setFloatingMenu(el('#facultyOptions'), el('#facultySelect'), false);
   if (!event.target.closest('.site-header')) setFloatingMenu(el('.product-menu'), el('.nav-products'), false);
 });
 modal.addEventListener('click', (event) => { if (event.target === modal) modal.close(); });
+orderModal.addEventListener('click', (event) => { if (event.target === orderModal) orderModal.close(); });
 modal.addEventListener('close', () => document.body.classList.remove('modal-open'));
 backdrop.addEventListener('click', () => toggleCart(false));
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') toggleCart(false); });
