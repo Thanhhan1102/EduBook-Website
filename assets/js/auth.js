@@ -2,7 +2,7 @@
   const sessionKey = 'iuh-edubook-session';
   const usersKey = 'iuh-edubook-users';
   const demoAccounts = {
-    'user@iuh.edu.vn': { password: '123456', role: 'user', name: 'Nguyễn Lan Anh', subtitle: 'K18 · CNTT', studentId: '21123451', faculty: 'Công nghệ thông tin', phone: '0901 234 567', birthday: '15/08/2003', address: 'Gò Vấp, TP. Hồ Chí Minh' },
+    'user@iuh.edu.vn': { password: '123456', role: 'user', name: 'Nguyễn Lan Anh', subtitle: 'K18 · CNTT', studentId: '21123451', faculty: 'Khoa Công nghệ thông tin', phone: '0901 234 567', birthday: '15/08/2003', address: 'Gò Vấp, TP. Hồ Chí Minh' },
     'admin@iuh.edu.vn': { password: 'admin123', role: 'admin', name: 'Quản trị EduBook', subtitle: 'Thư viện IUH', staffId: 'IUH-ADMIN-01', faculty: 'Thư viện IUH', phone: '(028) 38940 390', birthday: '—', address: '12 Nguyễn Văn Bảo, Gò Vấp' }
   };
 
