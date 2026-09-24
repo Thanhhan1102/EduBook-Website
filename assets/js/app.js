@@ -9,7 +9,7 @@ const defaultBooks = [
   { id: 'web405', title: 'Lập Trình Web với Java & Spring', code: 'IT405', faculty: 'Khoa Công nghệ thông tin', author: 'ThS. Trần Minh Hoàng · CNPM IUH', condition: 'pass', price: 41000, oldPrice: 82000, rent: 28000, image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=800&q=80', description: 'Giáo trình thực hành xây dựng ứng dụng web với Java, Spring Boot và cơ sở dữ liệu.' }
 ];
 
-const books = window.eduBookStore?.getBooks?.() || defaultBooks;
+let books = window.eduBookStore?.getBooks?.() || defaultBooks;
 const state = { mode: 'buy', query: '', faculty: 'all', condition: 'all', sort: 'relevant', favorites: new Set(), cart: [] };
 const initialParams = new URLSearchParams(window.location.search);
 if (initialParams.get('mode') === 'rent') state.mode = 'rent';
@@ -18,12 +18,14 @@ if (['Khoa Công nghệ thông tin', 'Khoa Công nghệ Điện', 'Khoa Công ng
 
 const el = (selector) => document.querySelector(selector);
 const formatMoney = (amount) => `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const bookGrid = el('#bookGrid');
 const modal = el('#bookModal');
 const orderModal = el('#orderModal');
 const cartDrawer = el('#cartDrawer');
 const backdrop = el('#backdrop');
 let modalMode = 'buy';
+let catalogReady = false;
 let toastTimer;
 let authRedirectTimer;
 const facultyLabels = { all: 'Tất cả khoa', 'Khoa Công nghệ thông tin': 'Khoa Công nghệ thông tin', 'Khoa Công nghệ Điện': 'Khoa Công nghệ Điện', 'Khoa Công nghệ Điện tử': 'Khoa Công nghệ Điện tử', 'Khoa Công nghệ Động lực': 'Khoa Công nghệ Động lực', 'Khoa Công nghệ Nhiệt - Lạnh': 'Khoa Công nghệ Nhiệt - Lạnh', 'Khoa Công nghệ May - Thời trang': 'Khoa Công nghệ May - Thời trang', 'Khoa Công nghệ Hóa học': 'Khoa Công nghệ Hóa học', 'Khoa Khoa học Cơ bản': 'Khoa Khoa học Cơ bản', 'Khoa Luật và Khoa học chính trị': 'Khoa Luật và Khoa học chính trị', 'Khoa Ngoại ngữ': 'Khoa Ngoại ngữ', 'Khoa Quản trị Kinh doanh': 'Khoa Quản trị Kinh doanh', 'Khoa Thương mại - Du lịch': 'Khoa Thương mại - Du lịch', 'Khoa Kỹ thuật Xây dựng': 'Khoa Kỹ thuật Xây dựng', 'Khoa Khoa học Sức khỏe': 'Khoa Khoa học Sức khỏe' };
@@ -70,7 +72,7 @@ function renderBooks() {
   const currentBooks = getVisibleBooks();
   const isRent = state.mode === 'rent';
   el('#catalogDescription').textContent = isRent
-    ? 'Thuê giáo trình trong một học kỳ, tiết kiệm đến 70% và hoàn cọc tự động.'
+    ? 'Thuê giáo trình trong một học kỳ và nhận sách sau khi yêu cầu được xác nhận.'
     : 'Giáo trình được kiểm tra độ mới và tồn kho trước khi nhận tại Nhà sách EduBook.';
   el('#resultsText').textContent = `${currentBooks.length} giáo trình ${isRent ? 'cho thuê' : 'đang có sẵn'}`;
   el('#emptyState').hidden = currentBooks.length !== 0;
@@ -78,12 +80,12 @@ function renderBooks() {
   bookGrid.innerHTML = currentBooks.map((book) => {
     const price = isRent ? book.rent : book.price;
     const saved = state.favorites.has(book.id);
-    const discount = Math.round((1 - book.price / book.oldPrice) * 100);
+    const discount = book.oldPrice > 0 ? Math.round((1 - book.price / book.oldPrice) * 100) : 0;
     const condition = getCondition(book);
     const stock = getStock(book);
     return `<article class="book-card">
-      <div class="book-image"><button class="image-detail-target" type="button" data-detail="${book.id}" aria-label="Xem chi tiết ${book.title}"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" loading="lazy" /><span class="book-badge badge-${condition}">${conditionLabel(book)}</span></button><button class="favorite ${saved ? 'saved' : ''}" data-favorite="${book.id}" type="button" aria-label="${saved ? 'Bỏ lưu' : 'Lưu'} ${book.title}">${saved ? '♥' : '♡'}</button></div>
-      <div class="book-body"><div class="book-meta"><strong>${book.faculty}</strong><span>${book.code}</span></div><h3><button class="book-title-button" type="button" data-detail="${book.id}">${book.title}</button></h3><p class="book-author">${book.author}</p><p class="stock-line ${stock ? '' : 'out-of-stock'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</p><div class="price-row"><div><span class="price">${formatMoney(price)}</span><small>${isRent ? ' / kỳ' : ''}</small>${!isRent ? `<span class="old-price">${formatMoney(book.oldPrice)}</span>` : ''}</div>${!isRent ? `<span class="discount">-${discount}%</span>` : `<span class="discount">Tiết kiệm</span>`}</div><div class="card-actions"><button class="add-button" type="button" data-add="${book.id}" ${stock ? '' : 'disabled'}>${isRent ? 'Thuê sách' : 'Mua ngay'}</button><button class="details-button" type="button" data-detail="${book.id}">Chi tiết</button></div></div>
+      <div class="book-image"><button class="image-detail-target" type="button" data-detail="${escapeHtml(book.id)}" aria-label="Xem chi tiết ${escapeHtml(book.title)}"><img src="${escapeHtml(book.image)}" alt="Bìa giáo trình ${escapeHtml(book.title)}" loading="lazy" /><span class="book-badge badge-${condition}">${conditionLabel(book)}</span></button><button class="favorite ${saved ? 'saved' : ''}" data-favorite="${escapeHtml(book.id)}" type="button" aria-label="${saved ? 'Bỏ lưu' : 'Lưu'} ${escapeHtml(book.title)}">${saved ? '♥' : '♡'}</button></div>
+      <div class="book-body"><div class="book-meta"><strong>${escapeHtml(book.faculty)}</strong><span>${escapeHtml(book.code)}</span></div><h3><button class="book-title-button" type="button" data-detail="${escapeHtml(book.id)}">${escapeHtml(book.title)}</button></h3><p class="book-author">${escapeHtml(book.author)}</p><p class="stock-line ${stock ? '' : 'out-of-stock'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</p><div class="price-row"><div><span class="price">${formatMoney(price)}</span><small>${isRent ? ' / kỳ' : ''}</small>${!isRent ? `<span class="old-price">${formatMoney(book.oldPrice)}</span>` : ''}</div>${!isRent ? `<span class="discount">-${discount}%</span>` : `<span class="discount">Tiết kiệm</span>`}</div><div class="card-actions"><button class="add-button" type="button" data-add="${escapeHtml(book.id)}" ${stock ? '' : 'disabled'}>${isRent ? 'Thuê sách' : 'Mua ngay'}</button><button class="details-button" type="button" data-detail="${escapeHtml(book.id)}">Chi tiết</button></div></div>
     </article>`;
   }).join('');
   window.observeReveal?.(bookGrid.querySelectorAll('.book-card'));
@@ -118,54 +120,61 @@ function renderModal(book) {
     : `<div class="single-mode-note"><span>Hình thức cung cấp</span><strong>${availabilityLabels[availability]}</strong></div>`;
   el('#modalContent').innerHTML = `
     <div class="modal-layout">
-      <div class="modal-cover"><div class="modal-image-frame"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" /></div></div>
+      <div class="modal-cover"><div class="modal-image-frame"><img src="${escapeHtml(book.image)}" alt="Bìa giáo trình ${escapeHtml(book.title)}" /></div></div>
       <div class="modal-info">
-        <p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${book.faculty} · ${book.code}</p>
-        <h2>${book.title}</h2>
-        <p class="author">${author}</p>
+        <p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${escapeHtml(book.faculty)} · ${escapeHtml(book.code)}</p>
+        <h2>${escapeHtml(book.title)}</h2>
+        <p class="author">${escapeHtml(author)}</p>
         <div class="modal-rating"><strong>★ 4.9 / 5.0</strong><span>184 sinh viên đã dùng học liệu này</span></div>
         <div class="book-specs">
           <div><span>Độ mới sách</span><strong>${conditionDetailLabels[getCondition(book)]}</strong></div>
           <div><span>Tồn kho</span><strong class="${stock ? 'stock-available' : 'stock-unavailable'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</strong></div>
         </div>
         ${modeControl}
-        <div class="price-panel"><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Phí thuê 4 tháng · đặt cọc 0đ</small>'}</div>
-        <p class="book-description">${book.description}</p>
-        <ul class="modal-benefits"><li>Đúng đề cương CNTT 2024–2025</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul>
-        <button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${book.id}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button>
+        <div class="price-panel"><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Phí thuê 4 tháng · cọc giữ sách tính khi đặt</small>'}</div>
+        <p class="book-description">${escapeHtml(book.description)}</p>
+        <ul class="modal-benefits"><li>Kiểm tra đúng học phần trước khi nhận</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul>
+        <button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${escapeHtml(book.id)}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button>
       </div>
     </div>`;
 }
 
-function requireTransaction() {
-  if (window.eduAuth?.getSession?.()) return true;
+async function requireTransaction() {
+  await window.eduAuth.ready;
+  if (!window.eduBackend.client) { showToast(window.eduBackend.error || 'Chưa kết nối Supabase.'); return false; }
+  if (!catalogReady) { showToast('Kho sách chưa tải xong. Vui lòng thử lại.'); return false; }
+  if (window.eduAuth.getSession()?.role === 'student') return true;
+  if (window.eduAuth.getSession()?.role === 'admin') { showToast('Tài khoản quản trị không thể đặt sách.'); return false; }
   showToast('Hãy đăng nhập hoặc đăng ký tài khoản trước khi giao dịch.');
   clearTimeout(authRedirectTimer);
   authRedirectTimer = setTimeout(() => { window.location.href = 'login.html?next=catalog'; }, 900);
   return false;
 }
 
-function addToCart(id, mode = state.mode) {
-  if (!requireTransaction()) return;
+async function addToCart(id, mode = state.mode) {
+  if (!await requireTransaction()) return false;
   const book = books.find((item) => item.id === id);
-  if (!book) return;
-  if (!supportsMode(book, mode)) { showToast('Giáo trình này không có hình thức bạn đã chọn.'); return; }
+  if (!book) return false;
+  if (!supportsMode(book, mode)) { showToast('Giáo trình này không có hình thức bạn đã chọn.'); return false; }
   const existing = state.cart.find((entry) => entry.id === id && entry.mode === mode);
-  if (getStock(book) <= (existing?.quantity || 0)) {
+  const reservedQuantity = state.cart.filter((entry) => entry.id === id)
+    .reduce((total, entry) => total + entry.quantity, 0);
+  if (getStock(book) <= reservedQuantity) {
     showToast(`Tồn kho không đủ cho “${book.title}”.`);
-    return;
+    return false;
   }
   if (existing) existing.quantity += 1;
   else state.cart.push({ id, mode, quantity: 1 });
   renderCart();
   showToast(`${mode === 'rent' ? 'Đã thêm gói thuê' : 'Đã thêm vào giỏ'}: ${book.title}`);
+  return true;
 }
 
 function renderCart() {
   const count = state.cart.reduce((total, item) => total + item.quantity, 0);
   el('#cartCount').textContent = count;
   const items = getCartItems();
-  el('#cartItems').innerHTML = items.length ? items.map(({ book, mode, quantity }) => `<div class="cart-item"><img src="${book.image}" alt="" /><div><strong>${book.title}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity} · còn ${getStock(book)} cuốn</small><strong>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</strong></div><button class="remove-cart" type="button" data-remove="${book.id}" data-remove-mode="${mode}" aria-label="Xóa ${book.title}">×</button></div>`).join('') : '<p class="cart-empty">Giỏ giáo trình của bạn đang trống.</p>';
+  el('#cartItems').innerHTML = items.length ? items.map(({ book, mode, quantity }) => `<div class="cart-item"><img src="${escapeHtml(book.image)}" alt="" /><div><strong>${escapeHtml(book.title)}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity} · còn ${getStock(book)} cuốn</small><strong>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</strong></div><button class="remove-cart" type="button" data-remove="${escapeHtml(book.id)}" data-remove-mode="${mode}" aria-label="Xóa ${escapeHtml(book.title)}">×</button></div>`).join('') : '<p class="cart-empty">Giỏ giáo trình của bạn đang trống.</p>';
   el('#cartTotal').textContent = formatMoney(getCartTotal());
 }
 
@@ -176,8 +185,8 @@ function toggleCart(open) {
   document.body.style.overflow = open ? 'hidden' : '';
 }
 
-function openOrderModal() {
-  if (!requireTransaction()) return;
+async function openOrderModal() {
+  if (!await requireTransaction()) return;
   const items = getCartItems();
   if (!items.length) {
     showToast('Hãy thêm giáo trình vào giỏ trước nhé.');
@@ -187,7 +196,7 @@ function openOrderModal() {
   const total = getCartTotal();
   const deposit = Math.ceil(total * 0.2 / 1000) * 1000;
   el('#orderItemCount').textContent = `${items.reduce((sum, item) => sum + item.quantity, 0)} cuốn`;
-  el('#orderSummaryItems').innerHTML = items.map(({ book, mode, quantity }) => `<div class="order-item"><img src="${book.image}" alt="" /><div><strong>${book.title}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity}</small></div><span>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</span></div>`).join('');
+  el('#orderSummaryItems').innerHTML = items.map(({ book, mode, quantity }) => `<div class="order-item"><img src="${escapeHtml(book.image)}" alt="" /><div><strong>${escapeHtml(book.title)}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity}</small></div><span>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</span></div>`).join('');
   el('#orderTotal').textContent = formatMoney(total);
   el('#orderDeposit').textContent = formatMoney(deposit);
   el('#orderName').value = session.name || '';
@@ -198,18 +207,26 @@ function openOrderModal() {
   orderModal.showModal();
 }
 
-function completeOrder() {
-  const reserved = new Map();
-  state.cart.forEach((item) => reserved.set(item.id, (reserved.get(item.id) || 0) + item.quantity));
-  books.forEach((book) => {
-    if (reserved.has(book.id)) book.stock = Math.max(0, getStock(book) - reserved.get(book.id));
-  });
-  window.eduBookStore?.saveBooks?.(books);
-  state.cart = [];
-  renderCart();
-  renderBooks();
-  orderModal.close();
-  showToast('Đã gửi yêu cầu đặt sách. Nhà sách EduBook sẽ xác nhận trong giờ làm việc.');
+async function completeOrder() {
+  const form = el('#orderForm');
+  const submit = form.querySelector('[type="submit"]');
+  const values = new FormData(form);
+  submit.disabled = true;
+  try {
+    await window.eduBackend.placeOrder(state.cart, {
+      name: values.get('name')?.trim(), studentId: values.get('studentId')?.trim(),
+      email: values.get('email')?.trim(), phone: values.get('phone')?.trim()
+    }, values.get('pickup'));
+    const reserved = new Map();
+    state.cart.forEach((item) => reserved.set(item.id, (reserved.get(item.id) || 0) + item.quantity));
+    books.forEach((book) => { if (reserved.has(book.id)) book.stock = Math.max(0, getStock(book) - reserved.get(book.id)); });
+    state.cart = [];
+    renderCart();
+    renderBooks();
+    orderModal.close();
+    showToast('Đã gửi yêu cầu đặt sách. Nhà sách EduBook sẽ xác nhận trong giờ làm việc.');
+  } catch (error) { showToast(error.message || 'Không gửi được yêu cầu. Vui lòng thử lại.'); }
+  finally { submit.disabled = false; }
 }
 
 function showToast(message) {
@@ -242,7 +259,7 @@ function placeProductMenu() {
   else header.append(menu);
 }
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
   const target = event.target.closest('button, a');
   if (!target) return;
   if (target.matches('.nav-products')) { placeProductMenu(); const menu = el('.product-menu'); setFloatingMenu(menu, target, !menu.classList.contains('is-open')); }
@@ -255,10 +272,10 @@ document.addEventListener('click', (event) => {
   if (target.id === 'filterButton') { const filters = el('#filters'); filters.hidden = !filters.hidden; target.setAttribute('aria-expanded', String(!filters.hidden)); }
   if (target.dataset.filter) { state.condition = target.dataset.filter; document.querySelectorAll('[data-filter]').forEach((button) => button.classList.toggle('active', button === target)); renderBooks(); }
   if (target.dataset.favorite) { const id = target.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); renderBooks(); }
-  if (target.dataset.add) addToCart(target.dataset.add);
+  if (target.dataset.add) await addToCart(target.dataset.add);
   if (target.dataset.detail) openBook(target.dataset.detail);
   if (target.dataset.modalMode) { const title = el('.modal-info h2')?.textContent; const book = books.find((item) => item.title === title); if (book) { modalMode = target.dataset.modalMode; renderModal(book); } }
-  if (target.dataset.modalAdd) { addToCart(target.dataset.modalAdd, modalMode); modal.close(); }
+  if (target.dataset.modalAdd && await addToCart(target.dataset.modalAdd, modalMode)) modal.close();
   if (target.matches('.modal-close') && !target.dataset.closeOrder) modal.close();
   if (target.dataset.closeOrder !== undefined) orderModal.close();
   if (target.matches('.cart-button')) toggleCart(true);
@@ -286,3 +303,20 @@ renderBooks();
 renderCart();
 placeProductMenu();
 window.addEventListener('resize', placeProductMenu);
+
+window.eduBackend.ready.then(async (connected) => {
+  if (!connected) {
+    el('#catalogDescription').textContent = 'Đang xem sách mẫu. Đăng nhập và đặt sách sẽ hoạt động sau khi kết nối hệ thống.';
+    el('.status-dot').textContent = '● Chưa kết nối hệ thống đặt sách';
+    return;
+  }
+  try {
+    books = await window.eduBackend.getBooks();
+    catalogReady = true;
+    renderBooks();
+    renderCart();
+  } catch (error) {
+    el('.status-dot').textContent = '● Chưa tải được kho sách';
+    showToast(`Không tải được catalog: ${error.message}`);
+  }
+});

@@ -237,3 +237,23 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
   .modal-info { margin-right: 7px; padding: 19px 15px 24px 18px; }
   .modal-info h2 { font-size: 24px; }
 }
+
+/* Live order views. */
+.admin-orders-card { margin-top: 24px; }
+.admin-order-list, .profile-order-list { display: grid; }
+.admin-order, .profile-order { display: flex; justify-content: space-between; gap: 22px; padding: 17px 0; border-bottom: 1px solid #e6eef4; }
+.admin-order:last-child, .profile-order:last-child { border-bottom: 0; }
+.admin-order { align-items: start; }
+.admin-order > div:first-child { min-width: 210px; }
+.admin-order strong, .profile-order strong { color: var(--navy); }
+.admin-order small, .profile-order small { display: block; margin-top: 4px; color: #687e93; font-size: 11px; }
+.admin-order ul { flex: 1; margin: 0; padding-left: 18px; color: #41566e; font-size: 12px; }
+.admin-order-actions { display: grid; gap: 9px; min-width: 164px; }
+.admin-order-actions select { padding: 8px; color: var(--navy); background: #f8fbfd; border: 1px solid #d5e5f0; border-radius: 8px; font: inherit; font-size: 12px; }
+.profile-order p { margin: 8px 0 0; color: #41566e; font-size: 12px; }
+.profile-order > strong { white-space: nowrap; }
+@media (max-width: 720px) {
+  .admin-order { flex-direction: column; gap: 10px; }
+  .admin-order-actions { width: 100%; }
+  .profile-order { gap: 12px; }
+}

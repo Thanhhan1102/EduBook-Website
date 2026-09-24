@@ -1,47 +1,101 @@
 (() => {
-  const sessionKey = 'iuh-edubook-session';
-  const usersKey = 'iuh-edubook-users';
-  const demoAccounts = {
-    'user@iuh.edu.vn': { password: '123456', role: 'user', name: 'Nguyễn Lan Anh', subtitle: 'K18 · CNTT', studentId: '21123451', faculty: 'Khoa Công nghệ thông tin', phone: '0901 234 567', birthday: '15/08/2003', address: 'Gò Vấp, TP. Hồ Chí Minh' },
-    'admin@iuh.edu.vn': { password: 'admin123', role: 'admin', name: 'Quản trị EduBook', subtitle: 'Thư viện IUH', staffId: 'IUH-ADMIN-01', faculty: 'Thư viện IUH', phone: '(028) 38940 390', birthday: '—', address: '12 Nguyễn Văn Bảo, Gò Vấp' }
+  let currentSession = null;
+
+  const fromProfile = (user, profile) => ({
+    id: user.id,
+    email: user.email,
+    role: profile.role,
+    name: profile.full_name,
+    subtitle: profile.role === 'admin' ? 'Quản trị EduBook' : profile.student_id,
+    studentId: profile.student_id,
+    faculty: profile.faculty,
+    phone: profile.phone || '',
+    birthday: profile.birthday || '',
+    address: profile.address || ''
+  });
+
+  const loadSession = async (user) => {
+    if (!user) { currentSession = null; return null; }
+    const db = await window.eduBackend.requireClient();
+    const { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).single();
+    if (error) throw error;
+    currentSession = fromProfile(user, profile);
+    return currentSession;
   };
 
-  const getRegisteredUsers = () => {
-    try { return JSON.parse(localStorage.getItem(usersKey)) || {}; } catch { return {}; }
-  };
-  const getAccounts = () => ({ ...demoAccounts, ...getRegisteredUsers() });
+  const ready = (async () => {
+    try {
+      const db = await window.eduBackend.requireClient();
+      const { data, error } = await db.auth.getUser();
+      if (error) throw error;
+      await loadSession(data.user);
+    } catch {
+      currentSession = null;
+    }
+    return currentSession;
+  })();
 
-  const getSession = () => {
-    try { return JSON.parse(localStorage.getItem(sessionKey)); } catch { return null; }
+  const signIn = async (email, password) => {
+    try {
+      const db = await window.eduBackend.requireClient();
+      const { data, error } = await db.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (error) throw error;
+      return { ok: true, session: await loadSession(data.user) };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Không thể đăng nhập. Vui lòng thử lại.' };
+    }
   };
-  const signIn = (email, password) => {
-    const account = getAccounts()[email.trim().toLowerCase()];
-    if (!account || account.password !== password) return { ok: false, message: 'Email hoặc mật khẩu chưa đúng.' };
-    const session = { email: email.trim().toLowerCase(), ...account };
-    delete session.password;
-    localStorage.setItem(sessionKey, JSON.stringify(session));
-    return { ok: true, session };
+
+  const register = async ({ name, email, password, studentId, faculty }) => {
+    try {
+      const db = await window.eduBackend.requireClient();
+      const { data, error } = await db.auth.signUp({
+        email: email.trim().toLowerCase(), password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login.html`,
+          data: { full_name: name.trim(), student_id: studentId.trim(), faculty }
+        }
+      });
+      if (error) throw error;
+      if (!data.session) return { ok: true, pendingEmail: true };
+      return { ok: true, session: await loadSession(data.user) };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Không thể tạo tài khoản. Vui lòng thử lại.' };
+    }
   };
-  const register = ({ name, email, password, studentId, faculty }) => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (getAccounts()[normalizedEmail]) return { ok: false, message: 'Email này đã được sử dụng.' };
-    const users = getRegisteredUsers();
-    users[normalizedEmail] = { password, role: 'user', name: name.trim(), subtitle: `${studentId.trim()} · ${faculty}`, studentId: studentId.trim(), faculty, phone: 'Chưa cập nhật', birthday: 'Chưa cập nhật', address: 'Chưa cập nhật' };
-    localStorage.setItem(usersKey, JSON.stringify(users));
-    return signIn(normalizedEmail, password);
+
+  const signOut = async () => {
+    try {
+      const db = await window.eduBackend.requireClient();
+      await db.auth.signOut();
+    } finally {
+      currentSession = null;
+    }
   };
-  const signOut = () => localStorage.removeItem(sessionKey);
+  const getSession = () => currentSession;
   const accountDestination = (session) => session?.role === 'admin' ? 'admin.html' : session ? 'catalog.html' : 'login.html';
+  const requireAdmin = async () => {
+    await ready;
+    if (currentSession?.role === 'admin') return currentSession;
+    window.location.replace('login.html?next=admin');
+    return null;
+  };
 
-  const renderProfile = () => {
-    const session = getSession();
+  const renderProfile = async () => {
+    await ready;
     document.querySelectorAll('.profile').forEach((profile) => {
+      const session = getSession();
       const name = session?.name || 'Đăng nhập';
       const subtitle = session?.subtitle || 'Tài khoản IUH';
-      const initials = session?.role === 'admin' ? 'AD' : session ? 'LA' : '↗';
+      const initials = session?.role === 'admin' ? 'AD' : session?.name
+        ? session.name.split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase()
+        : '↗';
       profile.setAttribute('aria-label', session ? `Mở tài khoản ${name}` : 'Đăng nhập EduBook');
       profile.setAttribute('aria-expanded', 'false');
-      profile.innerHTML = `<span class="avatar">${initials}</span><span class="profile-copy"><strong>${name}</strong><small>${subtitle}</small></span>`;
+      profile.innerHTML = '<span class="avatar"></span><span class="profile-copy"><strong></strong><small></small></span>';
+      profile.querySelector('.avatar').textContent = initials;
+      profile.querySelector('strong').textContent = name;
+      profile.querySelector('small').textContent = subtitle;
       if (!session) {
         profile.addEventListener('click', () => { window.location.href = 'login.html'; });
         return;
@@ -50,7 +104,8 @@
       const menu = document.createElement('div');
       menu.className = 'account-menu';
       menu.hidden = true;
-      menu.innerHTML = `<a href="profile.html"><span>◉</span><span><strong>Hồ sơ cá nhân</strong><small>${session.email}</small></span></a><button type="button" data-account-logout><span>↪</span><span>Đăng xuất</span></button>`;
+      menu.innerHTML = '<a href="profile.html"><span>◉</span><span><strong>Hồ sơ cá nhân</strong><small></small></span></a><button type="button" data-account-logout><span>↪</span><span>Đăng xuất</span></button>';
+      menu.querySelector('small').textContent = session.email;
       profile.insertAdjacentElement('afterend', menu);
 
       const closeMenu = () => {
@@ -58,19 +113,17 @@
         menu.classList.remove('is-open');
         window.setTimeout(() => { if (!menu.classList.contains('is-open')) menu.hidden = true; }, 180);
       };
-      const openMenu = () => {
-        menu.hidden = false;
-        requestAnimationFrame(() => menu.classList.add('is-open'));
-        profile.setAttribute('aria-expanded', 'true');
-      };
       profile.addEventListener('click', (event) => {
         event.stopPropagation();
-        menu.classList.contains('is-open') ? closeMenu() : openMenu();
+        const open = !menu.classList.contains('is-open');
+        menu.hidden = false;
+        requestAnimationFrame(() => menu.classList.toggle('is-open', open));
+        profile.setAttribute('aria-expanded', String(open));
+        if (!open) closeMenu();
       });
-      menu.addEventListener('click', (event) => {
-        const logout = event.target.closest('[data-account-logout]');
-        if (!logout) return;
-        signOut();
+      menu.addEventListener('click', async (event) => {
+        if (!event.target.closest('[data-account-logout]')) return;
+        await signOut();
         window.location.href = 'login.html';
       });
       document.addEventListener('click', (event) => {
@@ -79,13 +132,6 @@
     });
   };
 
-  const requireAdmin = () => {
-    const session = getSession();
-    if (session?.role === 'admin') return session;
-    window.location.replace('login.html?next=admin');
-    return null;
-  };
-
-  window.eduAuth = { getSession, signIn, signOut, register, requireAdmin, accountDestination };
+  window.eduAuth = { ready, getSession, signIn, signOut, register, requireAdmin, accountDestination };
   document.addEventListener('DOMContentLoaded', renderProfile);
 })();

@@ -1,37 +1,30 @@
 # IUH EduBook
 
-Website tĩnh cho dịch vụ mua và thuê giáo trình IUH. Repo không cần package hay build tool, có thể deploy trực tiếp lên Vercel.
+Website mua và thuê giáo trình cho sinh viên IUH. Frontend là HTML/CSS/JavaScript tĩnh; Supabase quản lý tài khoản, hồ sơ, sách và yêu cầu đặt sách. Vercel phục vụ trang web và `/api/config`.
+
+## Thiết lập Supabase
+
+Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Cần chạy `supabase/migrations/202609240001_edubook.sql`, nạp `supabase/seed.sql`, sau đó đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
 
 ## Chạy local
 
-Từ thư mục repository, chạy:
+Khi đã liên kết repo với Vercel và có biến môi trường Development:
 
 ```powershell
-python -m http.server 4173
+npx vercel dev
 ```
 
-Sau đó mở `http://127.0.0.1:4173`.
-
-## Luồng đã có
-
-- `index.html` là Home: giới thiệu hai dịch vụ và điều hướng sang kho sách.
-- `catalog.html` là Subtab Giáo trình độc lập, chuyển đổi giữa **Giáo trình bán** và **Giáo trình thuê**.
-- Tìm kiếm, chọn khoa ở thanh tìm kiếm, lọc theo tình trạng, sắp xếp theo giá và lưu giáo trình.
-- Nút **Chi tiết** mở modal trong cùng trang theo yêu cầu; modal có thể đổi Mua/Thuê.
-- Thêm vào giỏ, xóa khỏi giỏ và thông báo demo khi tiếp tục đặt sách.
-- `login.html` dùng chung cho sinh viên và quản trị viên. `register.html` cho phép tạo tài khoản sinh viên demo. Demo: `user@iuh.edu.vn` / `123456`, `admin@iuh.edu.vn` / `admin123`.
-- `admin.html` cho phép thêm, gỡ và khôi phục giáo trình mẫu. Dữ liệu và phiên đăng nhập được lưu bằng `localStorage` của trình duyệt.
-- Thêm sách vào giỏ và tiếp tục đặt sách yêu cầu đăng nhập hoặc đăng ký tài khoản.
+`python -m http.server 4173` chỉ dùng để xem giao diện và sách mẫu; server tĩnh này không chạy `/api/config`, vì vậy đăng nhập và đặt sách sẽ báo chưa cấu hình.
 
 ## Cấu trúc
 
-- `index.html`: Home độc lập.
-- `catalog.html`: trang catalog/Subtab Giáo trình.
-- `login.html`: đăng nhập dùng chung cho hai vai trò.
-- `register.html`: đăng ký tài khoản sinh viên demo.
-- `profile.html`: xem thông tin cá nhân và trạng thái tài khoản.
-- `admin.html`: quản lý danh sách giáo trình cho quản trị viên.
-- `assets/css/styles.css`: design system, responsive layout và modal/drawer.
-- `assets/js/`: logic catalog, xác thực, admin và các tương tác UI.
+- `index.html`: trang chủ.
+- `catalog.html`: danh mục bán/thuê, giỏ hàng và yêu cầu đặt sách.
+- `login.html`, `register.html`, `profile.html`: tài khoản sinh viên và quản trị.
+- `admin.html`: thêm/gỡ sách, xem và cập nhật trạng thái yêu cầu.
+- `assets/js/backend.js`: client Supabase và các thao tác dữ liệu.
+- `api/config.js`: cung cấp URL và publishable key cho browser từ biến môi trường Vercel.
+- `supabase/migrations/`: schema, RLS và hàm đặt sách có khóa tồn kho.
+- `supabase/seed.sql`: 47 sách mẫu, có thể chạy lại mà không ghi đè sách/tồn kho hiện có.
 
-Các ảnh minh họa lấy từ các prototype đã có và Unsplash; cần thay bằng ảnh có bản quyền/asset nội bộ trước khi triển khai thật.
+Ảnh sách mẫu lấy từ prototype và Unsplash. Thay bằng ảnh được phép sử dụng trước khi vận hành thật.

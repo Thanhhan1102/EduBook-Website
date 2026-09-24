@@ -1,7 +1,4 @@
 (() => {
-  const key = 'iuh-edubook-books';
-  const versionKey = 'iuh-edubook-books-version';
-  const seedVersion = '6';
   const seedBooks = [
     { id: 'it201', title: 'Cấu Trúc Dữ Liệu & Giải Thuật', code: 'IT201', faculty: 'CNTT', author: 'TS. Nguyễn Văn Hùng · ĐH IUH', condition: 'new', price: 45000, oldPrice: 85000, rent: 25000, image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCJNX9XEviYQNdnE1QxxnT_8ouOmox3xTBmZttx5PohaC4MWfEK4Tnsw18kaENXT-GNC-I-s0CyU3ToUHUh7T7magfMNdaU8o0_2n2H27DNVKyXOBGS9-X3LqJ41S8_rKxqotmuXfwkdIBf3xMPo7GVmU2Tugal_96p6B52sQa7xJ7qmuft3AILzbdlDWJaj3miIVJiWRxdZLsNC0qBZjgVw-6GJnEeab2LX3flO1w4KnHWYNvYyv0euA', description: 'Giáo trình hệ thống hóa các cấu trúc dữ liệu và thuật toán nền tảng, kèm ví dụ bám sát học phần IT201.' },
     { id: 'it302', title: 'Lập Trình Hướng Đối Tượng với Java', code: 'IT302', faculty: 'CNTT', author: 'TS. Lê Văn Tuấn · Bộ môn CNPM', condition: 'new', price: 48000, oldPrice: 90000, rent: 25000, image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8XI9PXunLMctziOpS3AjUozaUjJV6FhZQSvsTe30rg6ph3IbboNqMULzr0XLRURGqjVtfgYY3HLm7gfz0mksU_QQKk2-mHqDzEgNz0ePojOvHK0ggeat_dIZY9fqfBOa6lA2ts6pT-C6qEQIeukZ3DA4_wyamlKhwUGaaSim8lvBNa3dbT_UL3C2ziPMkVu7kYaZ7w1Iib7nxs5QU4oVW4LoRmq7eTyYccKxeDBHDI6N4XhEZWX4S8w', description: 'Tài liệu thực hành Java 17, OOP, collections và design patterns cơ bản cho sinh viên CNTT.' },
@@ -24,6 +21,56 @@
     { id: 'plc301', title: 'Tự Động Hóa PLC', code: 'EE304', faculty: 'Điện – Điện tử', author: 'TS. Lê Hoàng Minh', condition: 'new', price: 59000, oldPrice: 104000, rent: 31000, image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80', description: 'Lập trình PLC, cảm biến và ứng dụng điều khiển công nghiệp.' }
   ];
 
+  const sampleImages = [
+    'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=800&q=80'
+  ];
+  const extraSubjects = [
+    ['it501', 'An Toàn Thông Tin', 'IT501', 'Khoa Công nghệ thông tin', 'Mật mã, bảo mật ứng dụng và thực hành phòng vệ hệ thống.'],
+    ['it402', 'Trí Tuệ Nhân Tạo Ứng Dụng', 'IT402', 'Khoa Công nghệ thông tin', 'Các thuật toán học máy nền tảng cùng bài tập ứng dụng.'],
+    ['el201', 'Mạch Điện Cơ Bản', 'EL201', 'Khoa Công nghệ Điện', 'Phân tích mạch một chiều, xoay chiều và bài tập đo lường.'],
+    ['el305', 'Hệ Thống Cung Cấp Điện', 'EL305', 'Khoa Công nghệ Điện', 'Thiết kế, vận hành và bảo vệ hệ thống điện công nghiệp.'],
+    ['et202', 'Vi Điều Khiển & Ứng Dụng', 'ET202', 'Khoa Công nghệ Điện tử', 'Lập trình vi điều khiển và thiết kế mạch nhúng cơ bản.'],
+    ['et401', 'Xử Lý Tín Hiệu Số', 'ET401', 'Khoa Công nghệ Điện tử', 'Lấy mẫu, lọc số, biến đổi Fourier và thực hành DSP.'],
+    ['dl202', 'Nguyên Lý Động Cơ Đốt Trong', 'DL202', 'Khoa Công nghệ Động lực', 'Cấu tạo, chu trình làm việc và tính toán động cơ.'],
+    ['dl304', 'Kỹ Thuật Ô Tô Điện', 'DL304', 'Khoa Công nghệ Động lực', 'Hệ truyền động, pin và điều khiển trên ô tô điện.'],
+    ['nl201', 'Nhiệt Động Lực Học Kỹ Thuật', 'NL201', 'Khoa Công nghệ Nhiệt - Lạnh', 'Định luật nhiệt động và các chu trình nhiệt kỹ thuật.'],
+    ['nl302', 'Kỹ Thuật Điều Hòa Không Khí', 'NL302', 'Khoa Công nghệ Nhiệt - Lạnh', 'Tính tải lạnh và chọn thiết bị điều hòa không khí.'],
+    ['mt202', 'Thiết Kế Trang Phục Cơ Bản', 'MT202', 'Khoa Công nghệ May - Thời trang', 'Dựng mẫu, chọn vật liệu và phát triển thiết kế trang phục.'],
+    ['mt310', 'Quản Lý Sản Xuất May', 'MT310', 'Khoa Công nghệ May - Thời trang', 'Lập kế hoạch và kiểm soát chất lượng chuyền may.'],
+    ['hh203', 'Hóa Hữu Cơ', 'HH203', 'Khoa Công nghệ Hóa học', 'Cấu trúc hợp chất hữu cơ và cơ chế phản ứng cơ bản.'],
+    ['hh305', 'Phân Tích Hóa Học', 'HH305', 'Khoa Công nghệ Hóa học', 'Phương pháp phân tích định tính, định lượng và xử lý số liệu.'],
+    ['ma202', 'Đại Số Tuyến Tính', 'MA202', 'Khoa Khoa học Cơ bản', 'Ma trận, không gian vector và ứng dụng trong kỹ thuật.'],
+    ['phy202', 'Vật Lý Đại Cương 2', 'VL202', 'Khoa Khoa học Cơ bản', 'Điện từ học, quang học và bài tập thực hành.'],
+    ['law101', 'Pháp Luật Đại Cương', 'LAW101', 'Khoa Luật và Khoa học chính trị', 'Khái niệm pháp luật và các tình huống áp dụng cơ bản.'],
+    ['law302', 'Luật Kinh Doanh', 'LAW302', 'Khoa Luật và Khoa học chính trị', 'Khung pháp lý cho doanh nghiệp và hợp đồng thương mại.'],
+    ['en202', 'Tiếng Anh Học Thuật', 'EN202', 'Khoa Ngoại ngữ', 'Kỹ năng đọc, viết và trình bày trong môi trường đại học.'],
+    ['jp101', 'Tiếng Nhật Sơ Cấp 1', 'JP101', 'Khoa Ngoại ngữ', 'Từ vựng, ngữ pháp và hội thoại tiếng Nhật nhập môn.'],
+    ['qt203', 'Quản Trị Học', 'QT203', 'Khoa Quản trị Kinh doanh', 'Chức năng quản trị và ra quyết định trong tổ chức.'],
+    ['kt204', 'Kế Toán Tài Chính', 'KT204', 'Khoa Quản trị Kinh doanh', 'Ghi nhận nghiệp vụ và lập báo cáo tài chính cơ bản.'],
+    ['dl301', 'Quản Trị Du Lịch', 'DL301', 'Khoa Thương mại - Du lịch', 'Thiết kế sản phẩm và điều hành dịch vụ du lịch.'],
+    ['tm202', 'Thương Mại Điện Tử', 'TM202', 'Khoa Thương mại - Du lịch', 'Mô hình kinh doanh và vận hành kênh thương mại điện tử.'],
+    ['xd201', 'Sức Bền Vật Liệu', 'XD201', 'Khoa Kỹ thuật Xây dựng', 'Ứng suất, biến dạng và kiểm tra kết cấu cơ bản.'],
+    ['xd304', 'Kết Cấu Bê Tông Cốt Thép', 'XD304', 'Khoa Kỹ thuật Xây dựng', 'Nguyên lý cấu tạo và tính toán cấu kiện bê tông cốt thép.'],
+    ['sk201', 'Giải Phẫu Sinh Lý Người', 'SK201', 'Khoa Khoa học Sức khỏe', 'Cấu trúc cơ thể và chức năng các hệ cơ quan.'],
+    ['sk302', 'Sức Khỏe Cộng Đồng', 'SK302', 'Khoa Khoa học Sức khỏe', 'Kiến thức dự phòng và đánh giá sức khỏe cộng đồng.']
+  ];
+  seedBooks.push(...extraSubjects.map(([id, title, code, faculty, description], index) => {
+    const price = 35000 + (index % 7) * 4000;
+    return {
+      id, title, code, faculty, description: `Sách mẫu phục vụ thử nghiệm catalog. ${description}`,
+      author: 'Nhóm biên soạn EduBook', condition: ['new', 'over80', 'over60'][index % 3],
+      availability: ['both', 'buy', 'rent'][index % 3], price, oldPrice: price * 2,
+      rent: Math.round(price * 0.55 / 1000) * 1000, stock: 8 + (index % 12),
+      image: sampleImages[index % sampleImages.length]
+    };
+  }));
+
   const clone = (items) => JSON.parse(JSON.stringify(items));
   const facultyMap = {
     'CNTT': 'Khoa Công nghệ thông tin',
@@ -43,26 +90,7 @@
     const availability = ['buy', 'rent', 'both'].includes(book.availability) ? book.availability : ['both', 'buy', 'rent'][index % 3];
     return { ...book, faculty: facultyMap[book.faculty] || book.faculty, condition, stock, availability };
   });
-  const getBooks = () => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(key));
-      if (Array.isArray(stored) && stored.length) {
-        const existingIds = new Set(stored.map((book) => book.id));
-        const merged = localStorage.getItem(versionKey) === seedVersion
-          ? stored
-          : [...stored, ...seedBooks.filter((book) => !existingIds.has(book.id))];
-        const normalized = normalizeBooks(merged);
-        localStorage.setItem(key, JSON.stringify(normalized));
-        localStorage.setItem(versionKey, seedVersion);
-        return normalized;
-      }
-    } catch { /* Reset malformed demo data. */ }
-    const initial = normalizeBooks(clone(seedBooks));
-    localStorage.setItem(key, JSON.stringify(initial));
-    localStorage.setItem(versionKey, seedVersion);
-    return initial;
-  };
-  const saveBooks = (items) => { localStorage.setItem(key, JSON.stringify(normalizeBooks(items))); localStorage.setItem(versionKey, seedVersion); };
-  window.eduBookStore = { getBooks, saveBooks, seedBooks: normalizeBooks(clone(seedBooks)) };
+  const normalizedSeeds = normalizeBooks(clone(seedBooks));
+  window.eduBookStore = { getBooks: () => clone(normalizedSeeds), seedBooks: normalizedSeeds };
 
 })();
