@@ -28,7 +28,10 @@ let toastTimer;
 let authRedirectTimer;
 const facultyLabels = { all: 'Tất cả khoa', 'Khoa Công nghệ thông tin': 'Khoa Công nghệ thông tin', 'Khoa Công nghệ Điện': 'Khoa Công nghệ Điện', 'Khoa Công nghệ Điện tử': 'Khoa Công nghệ Điện tử', 'Khoa Công nghệ Động lực': 'Khoa Công nghệ Động lực', 'Khoa Công nghệ Nhiệt - Lạnh': 'Khoa Công nghệ Nhiệt - Lạnh', 'Khoa Công nghệ May - Thời trang': 'Khoa Công nghệ May - Thời trang', 'Khoa Công nghệ Hóa học': 'Khoa Công nghệ Hóa học', 'Khoa Khoa học Cơ bản': 'Khoa Khoa học Cơ bản', 'Khoa Luật và Khoa học chính trị': 'Khoa Luật và Khoa học chính trị', 'Khoa Ngoại ngữ': 'Khoa Ngoại ngữ', 'Khoa Quản trị Kinh doanh': 'Khoa Quản trị Kinh doanh', 'Khoa Thương mại - Du lịch': 'Khoa Thương mại - Du lịch', 'Khoa Kỹ thuật Xây dựng': 'Khoa Kỹ thuật Xây dựng', 'Khoa Khoa học Sức khỏe': 'Khoa Khoa học Sức khỏe' };
 const conditionLabels = { new: 'Mới 100%', over80: 'Độ mới trên 80%', over60: 'Độ mới trên 60%', pass: 'Độ mới trên 80%' };
+const availabilityLabels = { buy: 'Chỉ bán', rent: 'Chỉ thuê', both: 'Bán và thuê' };
 
+const getAvailability = (book) => ['buy', 'rent', 'both'].includes(book.availability) ? book.availability : 'both';
+const supportsMode = (book, mode) => getAvailability(book) === 'both' || getAvailability(book) === mode;
 const getCondition = (book) => book.condition === 'pass' ? 'over80' : (conditionLabels[book.condition] ? book.condition : 'new');
 const conditionLabel = (book) => conditionLabels[getCondition(book)];
 const getStock = (book) => Math.max(0, Number.isFinite(Number(book.stock)) ? Number(book.stock) : 10);
@@ -51,7 +54,8 @@ function getVisibleBooks() {
     const searchable = normal(`${book.title} ${book.code} ${book.author} ${book.faculty}`);
     return (!query || searchable.includes(query)) &&
       (state.faculty === 'all' || book.faculty === state.faculty) &&
-      (state.condition === 'all' || getCondition(book) === state.condition);
+      (state.condition === 'all' || getCondition(book) === state.condition) &&
+      supportsMode(book, state.mode);
   });
   return filtered.sort((a, b) => {
     const key = state.mode === 'rent' ? 'rent' : 'price';
@@ -95,7 +99,7 @@ function setMode(mode) {
 function openBook(id, mode = state.mode) {
   const book = books.find((item) => item.id === id);
   if (!book) return;
-  modalMode = mode;
+  modalMode = supportsMode(book, mode) ? mode : (getAvailability(book) === 'rent' ? 'rent' : 'buy');
   renderModal(book);
   document.body.classList.add('modal-open');
   modal.showModal();
@@ -105,7 +109,12 @@ function renderModal(book) {
   const rent = modalMode === 'rent';
   const price = rent ? book.rent : book.price;
   const stock = getStock(book);
-  el('#modalContent').innerHTML = `<div class="modal-layout"><div class="modal-cover"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" /></div><div class="modal-info"><p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${book.faculty} · ${book.code}</p><h2>${book.title}</h2><p class="author">${book.author}</p><div class="modal-rating"><strong>★ 4.9 / 5.0</strong><span>184 sinh viên đã dùng học liệu này</span></div><div class="book-specs"><div><span>Độ mới sách</span><strong>${conditionLabel(book)}</strong></div><div><span>Tồn kho</span><strong class="${stock ? 'stock-available' : 'stock-unavailable'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</strong></div></div><div class="mode-picker"><button class="${!rent ? 'active' : ''}" type="button" data-modal-mode="buy">▣ Mua sở hữu</button><button class="${rent ? 'active' : ''}" type="button" data-modal-mode="rent">↻ Thuê 1 học kỳ</button></div><div class="price-panel"><small>${rent ? 'Phí thuê 4 tháng · hoàn cọc tự động' : 'Giá trợ giá cho sinh viên IUH'}</small><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Đặt cọc 0đ qua xác thực SSO</small>'}</div><p class="book-description">${book.description}</p><ul class="modal-benefits"><li>Đúng đề cương CNTT 2024–2025</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul><button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${book.id}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button></div></div>`;
+  const availability = getAvailability(book);
+  const canSwitch = availability === 'both';
+  const modeControl = canSwitch
+    ? `<div class="mode-picker"><button class="${!rent ? 'active' : ''}" type="button" data-modal-mode="buy">▣ Mua sở hữu</button><button class="${rent ? 'active' : ''}" type="button" data-modal-mode="rent">↻ Thuê 1 học kỳ</button></div>`
+    : `<div class="single-mode-note"><span>Hình thức cung cấp</span><strong>${availabilityLabels[availability]}</strong></div>`;
+  el('#modalContent').innerHTML = `<div class="modal-layout"><div class="modal-cover"><img src="${book.image}" alt="Bìa giáo trình ${book.title}" /></div><div class="modal-info"><p class="eyebrow ${rent ? 'green-text' : 'blue-text'}">${book.faculty} · ${book.code}</p><h2>${book.title}</h2><p class="author">${book.author}</p><div class="modal-rating"><strong>★ 4.9 / 5.0</strong><span>184 sinh viên đã dùng học liệu này</span></div><div class="book-specs"><div><span>Độ mới sách</span><strong>${conditionLabel(book)}</strong></div><div><span>Tồn kho</span><strong class="${stock ? 'stock-available' : 'stock-unavailable'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</strong></div></div>${modeControl}<div class="price-panel"><small>${rent ? 'Phí thuê 4 tháng · hoàn cọc tự động' : 'Giá trợ giá cho sinh viên IUH'}</small><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Đặt cọc 0đ qua xác thực SSO</small>'}</div><p class="book-description">${book.description}</p><ul class="modal-benefits"><li>Đúng đề cương CNTT 2024–2025</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul><button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${book.id}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button></div></div>`;
 }
 
 function requireTransaction() {
@@ -120,6 +129,7 @@ function addToCart(id, mode = state.mode) {
   if (!requireTransaction()) return;
   const book = books.find((item) => item.id === id);
   if (!book) return;
+  if (!supportsMode(book, mode)) { showToast('Giáo trình này không có hình thức bạn đã chọn.'); return; }
   const existing = state.cart.find((entry) => entry.id === id && entry.mode === mode);
   if (getStock(book) <= (existing?.quantity || 0)) {
     showToast(`Tồn kho không đủ cho “${book.title}”.`);

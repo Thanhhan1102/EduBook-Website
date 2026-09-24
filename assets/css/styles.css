@@ -138,3 +138,42 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
 .order-modal { width:min(680px,calc(100% - 28px)); height:min(720px,calc(100dvh - 28px)); max-height:calc(100dvh - 28px); padding:0; overflow:hidden; color:var(--ink); background:#fff; border:0; border-radius:18px; box-shadow:0 25px 80px rgba(0,21,65,.35); }.order-modal::backdrop { background:rgba(7,25,64,.48); backdrop-filter:blur(4px); }.order-modal[open] { animation:modal-pop .24s cubic-bezier(.2,.8,.2,1) both; }.order-form { display:grid; gap:21px; height:100%; padding:34px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:#b8c9d8 transparent; }.order-form::-webkit-scrollbar { width:7px; }.order-form::-webkit-scrollbar-thumb { background:#b8c9d8; border:2px solid #fff; border-radius:999px; }.order-heading { padding-right:36px; }.order-heading h2 { margin:5px 0 7px; color:var(--navy); font:700 29px/1.15 'Source Serif 4',serif; }.order-heading p:not(.eyebrow) { margin:0; color:#61738a; font-size:13px; line-height:1.55; }.order-summary,.order-details { padding:16px; background:#f8fbfd; border:1px solid #deebf3; border-radius:13px; }.order-section-head,.order-totals { display:flex; align-items:center; justify-content:space-between; gap:12px; }.order-section-head { padding-bottom:9px; border-bottom:1px solid #dfebf2; }.order-section-head h3,.order-details h3 { margin:0; color:var(--navy); font-size:15px; }.order-section-head span { color:#718399; font-size:11px; font-weight:800; }.order-item { display:grid; grid-template-columns:38px 1fr auto; gap:9px; align-items:center; padding:10px 0; border-bottom:1px solid #e7eff4; }.order-item img { width:38px; height:48px; border-radius:6px; object-fit:cover; }.order-item strong,.order-item small { display:block; }.order-item strong { color:#28445f; font-size:12px; }.order-item small { margin-top:2px; color:#718399; font-size:10px; }.order-item > span { color:#167744; font-size:12px; font-weight:800; }.order-totals { padding-top:12px; color:#536b83; font-size:13px; }.order-totals strong { color:var(--navy); font-size:18px; }.deposit-note { display:flex; flex-wrap:wrap; gap:4px 7px; margin:13px 0 0; padding:10px 11px; color:#456075; background:#eaf8ed; border-radius:9px; font-size:11px; }.deposit-note strong { color:#168642; }.deposit-note span { width:100%; color:#628170; }.order-details { display:grid; gap:12px; background:#fff; }.order-details label { display:grid; gap:7px; color:#445a73; font-size:12px; font-weight:800; }.order-details input,.order-details select { width:100%; padding:11px 12px; color:var(--navy); background:#fbfdff; border:1px solid #d5e5f0; border-radius:9px; font:inherit; font-size:13px; outline-color:var(--blue); }.order-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
 .admin-book-meta { display:block; margin-top:4px; color:#718399; font-size:10px; font-weight:700; }
 @media (max-width:560px) { .order-modal { width:min(100% - 16px,680px); height:min(760px,calc(100dvh - 16px)); max-height:calc(100dvh - 16px); }.order-form { gap:16px; padding:25px 18px; }.order-heading h2 { font-size:25px; }.order-grid,.book-specs { grid-template-columns:1fr; }.order-item { grid-template-columns:36px 1fr; }.order-item > span { grid-column:2; }.cart-button .cart-icon { width:18px; height:18px; } }
+
+/* Logo asset and catalog availability modes. */
+.brand-mark {
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(13, 43, 115, .12);
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  object-fit: contain;
+}
+
+.auth-brand .brand-mark {
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 2px 12px rgba(2, 20, 58, .16);
+}
+
+.single-mode-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 11px 13px;
+  color: #456075;
+  background: #f3f8fc;
+  border: 1px solid #dce9f2;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.single-mode-note strong {
+  color: #167744;
+  font-size: 12px;
+}

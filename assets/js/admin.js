@@ -6,6 +6,7 @@ const adminMessage = document.querySelector('#adminMessage');
 const money = (amount) => `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
 const conditionText = (book) => ({ new: 'Mới 100%', over80: 'Độ mới trên 80%', over60: 'Độ mới trên 60%', pass: 'Độ mới trên 80%' }[book.condition] || 'Mới 100%');
 const stockText = (book) => `Tồn kho: ${Math.max(0, Number(book.stock ?? 10))} cuốn`;
+const availabilityText = (book) => ({ buy: 'Chỉ bán', rent: 'Chỉ thuê', both: 'Bán và thuê' }[book.availability] || 'Bán và thuê');
 
 const getBooks = () => window.eduBookStore.getBooks();
 const saveBooks = (books) => window.eduBookStore.saveBooks(books);
@@ -13,7 +14,7 @@ const saveBooks = (books) => window.eduBookStore.saveBooks(books);
 function renderAdminBooks() {
   const books = getBooks();
   adminCount.textContent = `${books.length} giáo trình đang hiển thị`;
-  adminList.innerHTML = books.map((book) => `<article class="admin-book"><img src="${book.image}" alt="" /><div><span>${book.faculty} · ${book.code}</span><h3>${book.title}</h3><p>${book.author}</p><strong>${money(book.price)} · thuê ${money(book.rent)}/kỳ</strong><small class="admin-book-meta">${conditionText(book)} · ${stockText(book)}</small></div><button class="delete-book" type="button" data-delete-book="${book.id}" aria-label="Gỡ ${book.title}">Gỡ</button></article>`).join('');
+  adminList.innerHTML = books.map((book) => `<article class="admin-book"><img src="${book.image}" alt="" /><div><span>${book.faculty} · ${book.code}</span><h3>${book.title}</h3><p>${book.author}</p><strong>${money(book.price)} · thuê ${money(book.rent)}/kỳ</strong><small class="admin-book-meta">${conditionText(book)} · ${stockText(book)} · ${availabilityText(book)}</small></div><button class="delete-book" type="button" data-delete-book="${book.id}" aria-label="Gỡ ${book.title}">Gỡ</button></article>`).join('');
 }
 
 function showAdminMessage(message) {
@@ -34,6 +35,7 @@ adminForm?.addEventListener('submit', (event) => {
     faculty: values.get('faculty'),
     author: values.get('author').trim(),
     condition: values.get('condition'),
+    availability: values.get('availability'),
     price,
     oldPrice: Math.round(price * 1.8),
     rent,

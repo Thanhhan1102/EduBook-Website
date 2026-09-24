@@ -1,7 +1,7 @@
 (() => {
   const key = 'iuh-edubook-books';
   const versionKey = 'iuh-edubook-books-version';
-  const seedVersion = '5';
+  const seedVersion = '6';
   const seedBooks = [
     { id: 'it201', title: 'Cấu Trúc Dữ Liệu & Giải Thuật', code: 'IT201', faculty: 'CNTT', author: 'TS. Nguyễn Văn Hùng · ĐH IUH', condition: 'new', price: 45000, oldPrice: 85000, rent: 25000, image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCJNX9XEviYQNdnE1QxxnT_8ouOmox3xTBmZttx5PohaC4MWfEK4Tnsw18kaENXT-GNC-I-s0CyU3ToUHUh7T7magfMNdaU8o0_2n2H27DNVKyXOBGS9-X3LqJ41S8_rKxqotmuXfwkdIBf3xMPo7GVmU2Tugal_96p6B52sQa7xJ7qmuft3AILzbdlDWJaj3miIVJiWRxdZLsNC0qBZjgVw-6GJnEeab2LX3flO1w4KnHWYNvYyv0euA', description: 'Giáo trình hệ thống hóa các cấu trúc dữ liệu và thuật toán nền tảng, kèm ví dụ bám sát học phần IT201.' },
     { id: 'it302', title: 'Lập Trình Hướng Đối Tượng với Java', code: 'IT302', faculty: 'CNTT', author: 'TS. Lê Văn Tuấn · Bộ môn CNPM', condition: 'new', price: 48000, oldPrice: 90000, rent: 25000, image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8XI9PXunLMctziOpS3AjUozaUjJV6FhZQSvsTe30rg6ph3IbboNqMULzr0XLRURGqjVtfgYY3HLm7gfz0mksU_QQKk2-mHqDzEgNz0ePojOvHK0ggeat_dIZY9fqfBOa6lA2ts6pT-C6qEQIeukZ3DA4_wyamlKhwUGaaSim8lvBNa3dbT_UL3C2ziPMkVu7kYaZ7w1Iib7nxs5QU4oVW4LoRmq7eTyYccKxeDBHDI6N4XhEZWX4S8w', description: 'Tài liệu thực hành Java 17, OOP, collections và design patterns cơ bản cho sinh viên CNTT.' },
@@ -40,7 +40,8 @@
     const priorPass = book.condition === 'pass';
     const condition = priorPass ? (index % 2 ? 'over80' : 'over60') : (['new', 'over80', 'over60'].includes(book.condition) ? book.condition : 'new');
     const stock = Number.isFinite(Number(book.stock)) ? Math.max(0, Number(book.stock)) : 6 + ((index * 7) % 19);
-    return { ...book, faculty: facultyMap[book.faculty] || book.faculty, condition, stock };
+    const availability = ['buy', 'rent', 'both'].includes(book.availability) ? book.availability : ['both', 'buy', 'rent'][index % 3];
+    return { ...book, faculty: facultyMap[book.faculty] || book.faculty, condition, stock, availability };
   });
   const getBooks = () => {
     try {
