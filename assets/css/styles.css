@@ -177,3 +177,49 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
   color: #167744;
   font-size: 12px;
 }
+
+/* Keep the book preview and the scroll area consistent across all details. */
+#modalContent { height: 100%; }
+.modal-cover { display: grid; place-items: center; padding: 22px; background: #eef5f8; }
+.modal-image-frame {
+  display: block;
+  width: min(100%, 280px);
+  height: min(100%, 370px);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e4edf2;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(20, 48, 76, .12);
+}
+.modal-image-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.modal-info {
+  margin-right: 12px;
+  padding: 28px 24px 26px 30px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.modal-info .eyebrow { margin: 0; }
+.modal-info h2 { margin: 5px 0 4px; line-height: 1.16; }
+.modal-info .author { margin: 0; font-size: 14px; }
+.modal-rating { flex-wrap: wrap; gap: 4px 12px; margin: 13px 0; }
+.modal-rating strong { white-space: nowrap; }
+.book-specs { gap: 8px; margin: 12px 0; }
+.book-specs div { display: flex; align-items: center; justify-content: space-between; gap: 7px; padding: 9px 10px; }
+.book-specs span, .book-specs strong { margin: 0; white-space: nowrap; }
+.book-specs strong { text-align: right; }
+.modal-info .mode-picker, .modal-info .single-mode-note { margin: 12px 0; }
+.price-panel { padding: 12px 15px; }
+.price-panel strong { margin: 0; font-size: 29px; line-height: 1.2; }
+.price-panel small { display: block; margin-top: 4px; }
+.book-description { margin: 13px 0; line-height: 1.5; }
+.modal-benefits { gap: 5px; margin: 12px 0 16px; }
+
+@media (max-width: 720px) {
+  .book-modal { width: min(100% - 16px, 860px); height: calc(100dvh - 20px); }
+  .modal-layout { grid-template-rows: minmax(120px, 26%) minmax(0, 1fr); }
+  .modal-cover { padding: 12px; }
+  .modal-image-frame { width: 108px; height: min(100%, 146px); }
+  .modal-info { margin-right: 7px; padding: 19px 15px 24px 18px; }
+  .modal-info h2 { font-size: 24px; }
+}
