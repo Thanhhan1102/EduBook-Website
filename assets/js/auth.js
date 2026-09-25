@@ -136,7 +136,10 @@
       const menu = document.createElement('div');
       menu.className = 'account-menu';
       menu.hidden = true;
-      menu.innerHTML = '<a href="profile.html"><span>◉</span><span><strong>Hồ sơ cá nhân</strong><small></small></span></a><button type="button" data-account-logout><span>↪</span><span>Đăng xuất</span></button>';
+      const adminLink = ['admin', 'subadmin'].includes(session.role)
+        ? '<a href="admin.html"><span>▣</span><span><strong>Quản trị Website</strong></span></a>'
+        : '';
+      menu.innerHTML = `<a href="profile.html"><span>◉</span><span><strong>Hồ sơ cá nhân</strong><small></small></span></a>${adminLink}<button type="button" data-account-logout><span>↪</span><span>Đăng xuất</span></button>`;
       menu.querySelector('small').textContent = session.email;
       profile.insertAdjacentElement('afterend', menu);
 
