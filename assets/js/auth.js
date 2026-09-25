@@ -58,7 +58,7 @@
       const { data, error } = await db.auth.signUp({
         email: email.trim().toLowerCase(), password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login.html`,
+          emailRedirectTo: window.eduBackend.authRedirectUrl || `${window.location.origin}/login.html`,
           data: { full_name: name.trim(), student_id: studentId.trim(), faculty }
         }
       });
@@ -67,6 +67,21 @@
       return { ok: true, session: await loadSession(data.user) };
     } catch (error) {
       return { ok: false, message: error.message || 'Không thể tạo tài khoản. Vui lòng thử lại.' };
+    }
+  };
+
+  const resendConfirmation = async (email) => {
+    try {
+      const db = await window.eduBackend.requireClient();
+      const { error } = await db.auth.resend({
+        type: 'signup',
+        email: email.trim().toLowerCase(),
+        options: { emailRedirectTo: window.eduBackend.authRedirectUrl || `${window.location.origin}/login.html` }
+      });
+      if (error) throw error;
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Không thể gửi lại email xác nhận.' };
     }
   };
 
@@ -138,6 +153,6 @@
     });
   };
 
-  window.eduAuth = { ready, getSession, signIn, signOut, register, requireAdmin, accountDestination };
+  window.eduAuth = { ready, getSession, signIn, signOut, register, resendConfirmation, requireAdmin, accountDestination };
   document.addEventListener('DOMContentLoaded', renderProfile);
 })();

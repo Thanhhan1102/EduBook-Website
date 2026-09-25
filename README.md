@@ -2,6 +2,8 @@
 
 Website mua và thuê giáo trình cho sinh viên IUH. Frontend là HTML/CSS/JavaScript tĩnh; Supabase quản lý tài khoản, hồ sơ, sách và yêu cầu đặt sách. Vercel phục vụ trang web và `/api/config`.
 
+Link xác nhận email mặc định quay về `https://edubook-iuh.vercel.app/login.html`. Supabase **Authentication → URL Configuration** cần có Site URL `https://edubook-iuh.vercel.app` và Redirect URL `https://edubook-iuh.vercel.app/login.html`; xem hướng dẫn bên dưới nếu đang gặp link `localhost:3000`.
+
 ## Thiết lập Supabase
 
 Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, tiếp đến `supabase/migrations/202609250002_admin_dashboard.sql`, rồi nạp `supabase/seed.sql`. Nếu đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql` trước migration dashboard. Đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.

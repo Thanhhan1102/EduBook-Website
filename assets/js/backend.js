@@ -1,6 +1,20 @@
 (() => {
+  const callbackHash = new URLSearchParams(window.location.hash.slice(1));
+  const callbackQuery = new URLSearchParams(window.location.search);
+  const callbackValue = (key) => callbackHash.get(key) || callbackQuery.get(key);
+  window.eduAuthCallback = {
+    error: callbackValue('error'),
+    errorCode: callbackValue('error_code'),
+    errorDescription: callbackValue('error_description'),
+    isEmailCallback: Boolean(
+      callbackValue('error') || callbackValue('error_code') ||
+      callbackHash.has('access_token') || callbackQuery.has('code') ||
+      callbackValue('type') === 'signup'
+    )
+  };
   let client = null;
   let errorMessage = '';
+  let authRedirectUrl = '';
 
   const ready = (async () => {
     try {
@@ -10,6 +24,7 @@
         return response.json();
       });
       if (!config.url || !config.publishableKey) throw new Error('Cấu hình Supabase chưa đầy đủ.');
+      authRedirectUrl = config.authRedirectUrl || '';
       client = window.supabase.createClient(config.url, config.publishableKey);
       return true;
     } catch (error) {
@@ -88,6 +103,7 @@
 
   window.eduBackend = {
     ready, get client() { return client; }, get error() { return errorMessage; },
+    get authRedirectUrl() { return authRedirectUrl; },
     requireClient, getBooks, saveBook, archiveBook, addMissingSeeds,
     placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole
   };

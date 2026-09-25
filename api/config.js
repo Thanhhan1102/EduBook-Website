@@ -8,6 +8,7 @@ module.exports = function handler(_request, response) {
   response.setHeader('Cache-Control', 'no-store');
   response.status(200).json({
     url: 'https://jhhpygtddakqcdjthuxq.supabase.co',
-    publishableKey
+    publishableKey,
+    authRedirectUrl: process.env.EDUBOOK_AUTH_REDIRECT_URL || 'https://edubook-iuh.vercel.app/login.html'
   });
 };
