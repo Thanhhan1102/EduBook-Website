@@ -3,8 +3,13 @@ const adminList = document.querySelector('#adminBookList');
 const adminCount = document.querySelector('#bookCount');
 const adminForm = document.querySelector('#bookForm');
 const adminMessage = document.querySelector('#adminMessage');
+const coverInput = adminForm?.elements.coverFile;
+const coverPreview = document.querySelector('#adminCoverPreview');
+const replaceCoverInput = document.querySelector('#replaceCoverInput');
 const orderList = document.querySelector('#adminOrderList');
 const orderCount = document.querySelector('#adminOrderCount');
+let coverPreviewUrl = '';
+let replacingCoverBookId = '';
 const money = (amount) => `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const conditionText = (book) => ({ new: 'Mới 100%', over80: 'Độ mới trên 80%', over60: 'Độ mới trên 60%' }[book.condition] || 'Mới 100%');
@@ -46,7 +51,7 @@ function drawBooks() {
   const visible = filtered.slice(start, start + adminState.pageSize);
   adminCount.textContent = `${filtered.length} / ${adminState.books.length} giáo trình đang hiển thị`;
   document.querySelector('#statBooks').textContent = adminState.books.length;
-  adminList.innerHTML = visible.length ? visible.map((book) => `<article class="admin-book"><img src="${escapeHtml(book.image)}" alt="" /><div><span>${escapeHtml(book.faculty)} · ${escapeHtml(book.code)}</span><h3>${escapeHtml(book.title)}</h3><p>${escapeHtml(book.author)}</p><strong>${bookPriceText(book)}</strong><small class="admin-book-meta">${conditionText(book)} · Tồn kho: ${book.stock} cuốn · ${availabilityText(book)}</small></div><button class="delete-book" type="button" data-delete-book="${escapeHtml(book.id)}" aria-label="Gỡ ${escapeHtml(book.title)}">Gỡ</button></article>`).join('') : '<p class="admin-empty">Không tìm thấy giáo trình.</p>';
+  adminList.innerHTML = visible.length ? visible.map((book) => `<article class="admin-book"><img src="${escapeHtml(book.image)}" alt="" /><div><span>${escapeHtml(book.faculty)} · ${escapeHtml(book.code)}</span><h3>${escapeHtml(book.title)}</h3><p>${escapeHtml(book.author)}</p><strong>${bookPriceText(book)}</strong><small class="admin-book-meta">${conditionText(book)} · Tồn kho: ${book.stock} cuốn · ${availabilityText(book)}</small></div><div class="admin-book-actions"><button class="edit-cover" type="button" data-cover-book="${escapeHtml(book.id)}" aria-label="Đổi ảnh bìa ${escapeHtml(book.title)}">Đổi ảnh</button><button class="delete-book" type="button" data-delete-book="${escapeHtml(book.id)}" aria-label="Gỡ ${escapeHtml(book.title)}">Gỡ</button></div></article>`).join('') : '<p class="admin-empty">Không tìm thấy giáo trình.</p>';
   document.querySelector('#bookPageInfo').textContent = filtered.length ? `Trang ${adminState.page}/${pages} · Sách ${start + 1}–${start + visible.length} trong ${filtered.length}` : '0 giáo trình';
   document.querySelector('#bookPrev').disabled = adminState.page === 1;
   document.querySelector('#bookNext').disabled = adminState.page >= pages;
@@ -121,9 +126,35 @@ function syncPriceFields() {
 adminForm?.elements.availability.addEventListener('change', syncPriceFields);
 if (adminForm) syncPriceFields();
 
+function clearCoverPreview() {
+  if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+  coverPreviewUrl = '';
+  coverPreview.querySelector('img').hidden = true;
+  coverPreview.querySelector('img').removeAttribute('src');
+  coverPreview.querySelector('span').hidden = false;
+}
+
+coverInput?.addEventListener('change', () => {
+  clearCoverPreview();
+  const file = coverInput.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || !file.size || file.size > 5 * 1024 * 1024) {
+    coverInput.value = '';
+    showAdminMessage('Ảnh bìa phải là JPG, PNG hoặc WebP và không quá 5 MB.', true);
+    return;
+  }
+  coverPreviewUrl = URL.createObjectURL(file);
+  const image = coverPreview.querySelector('img');
+  image.src = coverPreviewUrl;
+  image.hidden = false;
+  coverPreview.querySelector('span').hidden = true;
+});
+
 adminForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const values = new FormData(adminForm);
+  const coverFile = values.get('coverFile');
+  const hasCoverFile = coverFile instanceof File && coverFile.name !== '';
   const availability = values.get('availability');
   const price = availability === 'rent' ? 0 : Number(values.get('price'));
   const rent = availability === 'buy' ? 0 : Number(values.get('rent'));
@@ -139,17 +170,33 @@ adminForm?.addEventListener('submit', async (event) => {
   };
   const submit = adminForm.querySelector('[type="submit"]');
   submit.disabled = true;
+  let uploadedCover = null;
   try {
+    if (hasCoverFile) {
+      uploadedCover = await window.eduBackend.uploadBookCover(coverFile);
+      book.image = uploadedCover.publicUrl;
+    }
     await window.eduBackend.saveBook(book);
     adminForm.reset();
     syncPriceFields();
+    clearCoverPreview();
     await renderAdminBooks();
     showAdminMessage(`Đã thêm “${book.title}” vào catalog.`);
-  } catch (error) { showAdminMessage(error.message, true); }
+  } catch (error) {
+    if (uploadedCover) await window.eduBackend.deleteBookCover(uploadedCover.path).catch(() => {});
+    showAdminMessage(error.message, true);
+  }
   finally { submit.disabled = false; }
 });
 
 adminList?.addEventListener('click', async (event) => {
+  const coverButton = event.target.closest('[data-cover-book]');
+  if (coverButton) {
+    replacingCoverBookId = coverButton.dataset.coverBook;
+    replaceCoverInput.value = '';
+    replaceCoverInput.click();
+    return;
+  }
   const button = event.target.closest('[data-delete-book]');
   if (!button) return;
   button.disabled = true;
@@ -158,6 +205,28 @@ adminList?.addEventListener('click', async (event) => {
     await renderAdminBooks();
     showAdminMessage('Đã gỡ giáo trình khỏi catalog.');
   } catch (error) { button.disabled = false; showAdminMessage(error.message, true); }
+});
+
+replaceCoverInput?.addEventListener('change', async () => {
+  const file = replaceCoverInput.files[0];
+  if (!file || !replacingCoverBookId) return;
+  const bookId = replacingCoverBookId;
+  const button = [...adminList.querySelectorAll('[data-cover-book]')].find((item) => item.dataset.coverBook === bookId);
+  if (button) button.disabled = true;
+  let uploadedCover = null;
+  try {
+    uploadedCover = await window.eduBackend.uploadBookCover(file);
+    await window.eduBackend.updateBookCover(bookId, uploadedCover.publicUrl);
+    await renderAdminBooks();
+    showAdminMessage('Đã cập nhật ảnh bìa giáo trình.');
+  } catch (error) {
+    if (uploadedCover) await window.eduBackend.deleteBookCover(uploadedCover.path).catch(() => {});
+    showAdminMessage(error.message, true);
+  } finally {
+    if (button) button.disabled = false;
+    replacingCoverBookId = '';
+    replaceCoverInput.value = '';
+  }
 });
 
 document.querySelector('#restoreBooks')?.addEventListener('click', async (event) => {

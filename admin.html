@@ -28,11 +28,15 @@
           <label>Hình thức cung cấp<select name="availability" required><option value="" selected disabled>- Chọn hình thức cung cấp -</option><option value="both">Bán và thuê</option><option value="buy">Chỉ bán</option><option value="rent">Chỉ thuê</option></select></label>
           <div class="form-row admin-price-row" id="adminPriceRow" hidden><label data-price-field="buy" hidden>Giá bán<input name="price" type="number" min="1" placeholder="45000" disabled /></label><label data-price-field="rent" hidden>Giá thuê / kỳ<input name="rent" type="number" min="1" placeholder="25000" disabled /></label></div>
           <div class="form-row"><label>Độ mới sách<select name="condition"><option value="new">Mới 100%</option><option value="over80">Trên 80%</option><option value="over60">Trên 60%</option></select></label><label>Tồn kho<input name="stock" type="number" min="0" value="10" required /></label></div>
-          <label>Ảnh bìa (URL)<input name="image" type="url" placeholder="https://..." /></label><label>Mô tả<textarea name="description" rows="3" placeholder="Mô tả ngắn về giáo trình"></textarea></label>
+          <label>Ảnh bìa từ máy<input name="coverFile" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>JPG, PNG hoặc WebP · tối đa 5 MB</small></label>
+          <div class="admin-cover-preview" id="adminCoverPreview"><img alt="Xem trước ảnh bìa" hidden /><span>Chưa chọn ảnh bìa từ máy</span></div>
+          <label>Hoặc dùng URL ảnh bìa<input name="image" type="url" placeholder="https://..." /><small>Nếu chọn cả tệp và URL, tệp tải lên sẽ được ưu tiên.</small></label>
+          <label>Mô tả<textarea name="description" rows="3" placeholder="Mô tả ngắn về giáo trình"></textarea></label>
           <button class="button primary full-width" type="submit">Thêm vào catalog <span>+</span></button><p class="form-message success" id="adminMessage" role="status" hidden></p>
         </form></section>
         <section class="admin-list-card"><div class="admin-list-head"><div><h2>Danh sách hiện có</h2><p id="bookCount">Đang tải...</p></div><button class="text-button" id="restoreBooks" type="button">Bổ sung sách mẫu</button></div>
           <div class="admin-list-tools"><label for="bookSearch">Tìm sách<input id="bookSearch" type="search" placeholder="Tên sách, mã môn, khoa..." /></label><fieldset class="admin-page-size"><legend>Sách / trang</legend><button type="button" data-page-size="20" aria-pressed="true">20</button><button type="button" data-page-size="50" aria-pressed="false">50</button><button type="button" data-page-size="100" aria-pressed="false">100</button></fieldset></div>
+          <input id="replaceCoverInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden aria-label="Chọn ảnh bìa mới" />
           <div id="adminBookList" class="admin-book-list"></div><div class="admin-pagination"><span id="bookPageInfo"></span><div><button id="bookPrev" type="button">← Trước</button><button id="bookNext" type="button">Sau →</button></div></div>
         </section>
       </div>

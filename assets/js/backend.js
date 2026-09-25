@@ -55,6 +55,8 @@
     stock: book.stock, image_url: book.image, description: book.description,
     active: true
   });
+  const coverBucket = 'book-covers';
+  const coverExtensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
   const getBooks = async () => {
     const db = await requireClient();
@@ -71,6 +73,29 @@
   const addMissingSeeds = async (books) => {
     const db = await requireClient();
     return unwrap(await db.from('books').upsert(books.map(bookToRow), { onConflict: 'id', ignoreDuplicates: true }).select('id'));
+  };
+  const uploadBookCover = async (file) => {
+    if (!file || !coverExtensions[file.type] || file.size === 0 || file.size > 5 * 1024 * 1024) {
+      throw new Error('Ảnh bìa phải là JPG, PNG hoặc WebP và không quá 5 MB.');
+    }
+    const db = await requireClient();
+    const { data: userData, error: userError } = await db.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('Bạn cần đăng nhập để tải ảnh bìa.');
+    const path = `${userData.user.id}/${crypto.randomUUID()}.${coverExtensions[file.type]}`;
+    const uploaded = unwrap(await db.storage.from(coverBucket).upload(path, file, {
+      cacheControl: '31536000', contentType: file.type, upsert: false
+    }));
+    const { data: publicData } = db.storage.from(coverBucket).getPublicUrl(uploaded.path || path);
+    return { path: uploaded.path || path, publicUrl: publicData.publicUrl };
+  };
+  const deleteBookCover = async (path) => {
+    const db = await requireClient();
+    return unwrap(await db.storage.from(coverBucket).remove([path]));
+  };
+  const updateBookCover = async (id, imageUrl) => {
+    const db = await requireClient();
+    return unwrap(await db.from('books').update({ image_url: imageUrl }).eq('id', id).select('id,image_url').single());
   };
   const placeOrder = async (items, contact, pickup) => {
     const db = await requireClient();
@@ -105,6 +130,7 @@
     ready, get client() { return client; }, get error() { return errorMessage; },
     get authRedirectUrl() { return authRedirectUrl; },
     requireClient, getBooks, saveBook, archiveBook, addMissingSeeds,
+    uploadBookCover, deleteBookCover, updateBookCover,
     placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole
   };
 })();

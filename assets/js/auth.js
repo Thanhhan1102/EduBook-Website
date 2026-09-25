@@ -18,6 +18,11 @@
   const loadSession = async (user) => {
     if (!user) { currentSession = null; return null; }
     const db = await window.eduBackend.requireClient();
+    if (!user.email_confirmed_at) {
+      await db.auth.signOut();
+      currentSession = null;
+      throw new Error('Email chưa được xác nhận. Hãy mở link trong email hoặc gửi lại email xác nhận.');
+    }
     const { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).single();
     if (error) throw error;
     currentSession = fromProfile(user, profile);
@@ -48,7 +53,10 @@
       if (error) throw error;
       return { ok: true, session: await loadSession(data.user) };
     } catch (error) {
-      return { ok: false, message: error.message || 'Không thể đăng nhập. Vui lòng thử lại.' };
+      const unconfirmed = error.code === 'email_not_confirmed' || /email not confirmed/i.test(error.message || '');
+      return { ok: false, message: unconfirmed
+        ? 'Email chưa được xác nhận. Hãy mở link trong email hoặc dùng “Chưa nhận được email xác nhận?” bên dưới.'
+        : error.message || 'Không thể đăng nhập. Vui lòng thử lại.' };
     }
   };
 
@@ -63,7 +71,10 @@
         }
       });
       if (error) throw error;
-      if (!data.session) return { ok: true, pendingEmail: true };
+      if (!data.session || !data.user?.email_confirmed_at) {
+        if (data.session) await db.auth.signOut();
+        return { ok: true, pendingEmail: true };
+      }
       return { ok: true, session: await loadSession(data.user) };
     } catch (error) {
       return { ok: false, message: error.message || 'Không thể tạo tài khoản. Vui lòng thử lại.' };
