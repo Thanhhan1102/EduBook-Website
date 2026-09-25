@@ -1,4 +1,4 @@
-const adminState = { books: [], accounts: [], page: 1, pageSize: 20, role: null };
+const adminState = { books: [], accounts: [], orders: [], page: 1, pageSize: 20, role: null };
 const adminList = document.querySelector('#adminBookList');
 const adminCount = document.querySelector('#bookCount');
 const adminForm = document.querySelector('#bookForm');
@@ -68,17 +68,39 @@ async function renderAdminBooks() {
   } catch (error) { showAdminMessage(error.message, true); }
 }
 
+function updateAdminOrderNotice() {
+  const summary = window.eduOrderHolds.notice(adminState.orders, 'admin');
+  const notice = document.querySelector('#adminOrderNotice');
+  notice.hidden = !summary.text;
+  if (notice.textContent !== summary.text) notice.textContent = summary.text;
+  notice.classList.toggle('is-urgent', summary.urgent);
+  const count = document.querySelector('#adminUrgentCount');
+  const attentionCount = summary.urgentCount + summary.expiredCount;
+  count.hidden = attentionCount === 0;
+  count.textContent = attentionCount;
+}
+
+function drawAdminOrders() {
+  const orders = adminState.orders;
+  orderCount.textContent = `${orders.length} yêu cầu đặt sách`;
+  document.querySelector('#statOrders').textContent = orders.length;
+  orderList.innerHTML = orders.length ? orders.map((order) => {
+    const hold = window.eduOrderHolds;
+    const ended = ['completed', 'cancelled'].includes(order.status) || (hold.isActive(order) && hold.remainingMs(order) === 0);
+    return `<article class="admin-order" data-order-hold="${escapeHtml(order.id)}">
+      <div><strong>${escapeHtml(order.contact_name)}</strong><small>${escapeHtml(order.student_id)} · ${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</small><small>${new Date(order.created_at).toLocaleString('vi-VN')} · ${escapeHtml(order.pickup)}</small><span class="hold-status" data-hold-status>${escapeHtml(hold.statusLabel(order))}</span>${hold.countdownHtml(order)}</div>
+      <ul>${order.order_items.map((item) => `<li>${escapeHtml(item.book_title)} · ${item.mode === 'rent' ? 'Thuê' : 'Mua'} × ${item.quantity}</li>`).join('')}</ul>
+      <div class="admin-order-actions"><strong>${money(order.total)} · cọc ${order.deposit ? money(order.deposit) : 'Miễn phí'}</strong><select data-order-status="${escapeHtml(order.id)}" aria-label="Trạng thái đơn của ${escapeHtml(order.contact_name)}" ${ended ? 'disabled' : ''}>${Object.entries(statusText).map(([value, label]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
+    </article>`;
+  }).join('') : '<p class="admin-empty">Chưa có yêu cầu đặt sách.</p>';
+  window.eduOrderHolds.updateCountdowns(orderList);
+  updateAdminOrderNotice();
+}
+
 async function renderAdminOrders() {
   try {
-    const orders = await window.eduBackend.getOrders();
-    orderCount.textContent = `${orders.length} yêu cầu đặt sách`;
-    document.querySelector('#statOrders').textContent = orders.length;
-    orderList.innerHTML = orders.length ? orders.map((order) => `
-      <article class="admin-order">
-        <div><strong>${escapeHtml(order.contact_name)}</strong><small>${escapeHtml(order.student_id)} · ${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</small><small>${new Date(order.created_at).toLocaleString('vi-VN')} · ${escapeHtml(order.pickup)}</small></div>
-        <ul>${order.order_items.map((item) => `<li>${escapeHtml(item.book_title)} · ${item.mode === 'rent' ? 'Thuê' : 'Mua'} × ${item.quantity}</li>`).join('')}</ul>
-        <div class="admin-order-actions"><strong>${money(order.total)} · cọc ${order.deposit ? money(order.deposit) : 'Miễn phí'}</strong><select data-order-status="${escapeHtml(order.id)}" aria-label="Trạng thái đơn của ${escapeHtml(order.contact_name)}" ${['completed', 'cancelled'].includes(order.status) ? 'disabled' : ''}>${Object.entries(statusText).map(([value, label]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
-      </article>`).join('') : '<p class="admin-empty">Chưa có yêu cầu đặt sách.</p>';
+    adminState.orders = await window.eduBackend.getOrders();
+    drawAdminOrders();
   } catch (error) { showAdminMessage(error.message, true); }
 }
 
@@ -437,4 +459,10 @@ window.eduAuth.requireAdmin().then((session) => {
   renderAdminBooks();
   renderAdminOrders();
   renderAccounts();
+  window.setInterval(() => {
+    window.eduOrderHolds.updateCountdowns(orderList);
+    updateAdminOrderNotice();
+  }, 1000);
+  window.setInterval(() => { if (!document.hidden) renderAdminOrders(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAdminOrders(); });
 });

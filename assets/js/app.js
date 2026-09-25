@@ -230,7 +230,7 @@ async function completeOrder() {
     renderCart();
     renderBooks();
     orderModal.close();
-    showToast('Đã gửi yêu cầu đặt sách. Nhà sách EduBook sẽ xác nhận trong giờ làm việc.');
+    showToast('Đã gửi yêu cầu. Sách được giữ trong 24 giờ; theo dõi đồng hồ ở Hồ sơ cá nhân.');
   } catch (error) { showToast(error.message || 'Không gửi được yêu cầu. Vui lòng thử lại.'); }
   finally { submit.disabled = false; }
 }

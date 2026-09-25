@@ -14,7 +14,7 @@
     <div class="admin-stats" aria-label="Tổng quan"><div><span>Giáo trình</span><strong id="statBooks">—</strong></div><div><span>Yêu cầu đặt</span><strong id="statOrders">—</strong></div><div><span>Sinh viên</span><strong id="statStudents">—</strong></div><div><span>SubAdmin</span><strong id="statSubadmins">—</strong></div></div>
     <nav class="admin-tabs" aria-label="Các mục quản trị" role="tablist">
       <button id="tabBooks" type="button" role="tab" aria-controls="panelBooks" aria-selected="true" data-admin-tab="books">Giáo trình</button>
-      <button id="tabOrders" type="button" role="tab" aria-controls="panelOrders" aria-selected="false" data-admin-tab="orders">Yêu cầu đặt</button>
+      <button id="tabOrders" type="button" role="tab" aria-controls="panelOrders" aria-selected="false" data-admin-tab="orders">Yêu cầu đặt <span id="adminUrgentCount" class="hold-tab-count" hidden></span></button>
       <button id="tabStudents" type="button" role="tab" aria-controls="panelStudents" aria-selected="false" data-admin-tab="students">Tài khoản sinh viên</button>
       <button id="tabSubadmins" type="button" role="tab" aria-controls="panelSubadmins" aria-selected="false" data-admin-tab="subadmins" data-root-only hidden>Quản lý SubAdmin</button>
     </nav>
@@ -40,7 +40,7 @@
         </section>
       </div>
     </section>
-    <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
+    <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderNotice" class="hold-notice" role="status" hidden></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
     <section id="panelStudents" role="tabpanel" aria-labelledby="tabStudents" data-admin-panel="students" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Tài khoản sinh viên</h2><p id="studentCount">Đang tải...</p></div></div><label class="admin-account-search" for="studentSearch">Tìm sinh viên<input id="studentSearch" type="search" placeholder="Tên, email hoặc mã sinh viên" /></label><div id="studentList" class="admin-people-list"></div></div></section>
     <section id="panelSubadmins" role="tabpanel" aria-labelledby="tabSubadmins" data-admin-panel="subadmins" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Quản lý SubAdmin</h2><p>SubAdmin quản lý giáo trình, yêu cầu đặt và tài khoản sinh viên.</p></div></div><form id="promoteForm" class="admin-promote"><label for="promoteEmail">Cấp quyền cho tài khoản đã đăng ký<input id="promoteEmail" type="email" required placeholder="email@example.com" /></label><button class="button primary" type="submit">Cấp quyền</button></form><p class="admin-hint">Người được cấp quyền dùng trang đăng nhập chung. Chỉ admin chính có thể cấp hoặc thu hồi quyền.</p><div id="subadminList" class="admin-people-list"></div></div></section>
   </main>
@@ -64,6 +64,6 @@
       </form>
     </div>
   </dialog>
-  <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/admin.js"></script>
+  <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/order-holds.js"></script><script src="assets/js/admin.js"></script>
 </body>
 </html>

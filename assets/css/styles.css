@@ -247,8 +247,18 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
 }
 
 /* Live order views. */
+.hold-notice { margin:16px 0; padding:12px 15px; color:#245d83; background:#edf8ff; border:1px solid #c9e7f8; border-radius:11px; font-size:12px; font-weight:700; line-height:1.55; }
+.hold-notice.is-urgent { color:#8b5312; background:#fff6e8; border-color:#f4d8aa; }
+.hold-notice[hidden],.hold-tab-count[hidden] { display:none !important; }
+.profile-hold-notice { margin:25px 0 -8px; }
+.hold-countdown { display:inline-flex; margin-top:7px; padding:5px 8px; color:#126a48; background:#e9f8ef; border-radius:7px; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums; }
+.hold-countdown.is-urgent { color:#9c5d10; background:#fff2db; }
+.hold-countdown.is-expired { color:#a13848; background:#fff0f2; }
+.hold-status { display:block; margin-top:7px; color:#29587c; font-size:11px; font-weight:800; }
+.hold-tab-count { display:inline-grid; place-items:center; min-width:19px; height:19px; margin-left:4px; padding:0 4px; color:#fff; background:#cf6d1c; border-radius:999px; font-size:10px; }
 .admin-orders-card { margin-top: 24px; }
 .admin-order-list, .profile-order-list { display: grid; }
+.profile-order-list { max-height:600px; padding-right:8px; overflow-y:auto; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:#bfd5e8 transparent; }
 .admin-order, .profile-order { display: flex; justify-content: space-between; gap: 22px; padding: 17px 0; border-bottom: 1px solid #e6eef4; }
 .admin-order:last-child, .profile-order:last-child { border-bottom: 0; }
 .admin-order { align-items: start; }

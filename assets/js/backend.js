@@ -100,6 +100,10 @@
   };
   const placeOrder = async (items, contact, pickup) => {
     const db = await requireClient();
+    const { data: holdsReady, error: holdsError } = await db.rpc('book_holds_ready');
+    if (holdsError || !holdsReady) {
+      throw new Error('Hệ thống giữ sách 24 giờ chưa được kích hoạt. Vui lòng báo quản trị viên chạy migration giữ sách trong Supabase.');
+    }
     return unwrap(await db.rpc('place_order', {
       p_items: items.map(({ id, mode, quantity }) => ({ id, mode, quantity })),
       p_contact: contact,
