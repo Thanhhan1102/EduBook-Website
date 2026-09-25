@@ -1,19 +1,46 @@
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quản lý giáo trình | IUH EduBook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/styles.css" />
-  </head>
-  <body class="admin-page">
-    <header class="admin-header"><div class="container admin-header-inner"><a class="brand" href="index.html"><span class="brand-mark"><img src="assets/images/LOGO-transparent.png" alt="" /></span><span><strong>IUH EduBook</strong><small>TRANG QUẢN TRỊ</small></span></a><div class="admin-account"><span class="avatar">AD</span><span><strong>Quản trị EduBook</strong><small>Thư viện IUH</small></span><button class="text-button" id="logoutButton" type="button">Đăng xuất</button></div></div></header>
-    <main class="admin-main container"><div class="admin-heading"><div><p class="eyebrow blue-text">Quản lý kho học liệu</p><h1>Giáo trình</h1><p>Thêm hoặc gỡ các đầu sách đang hiển thị cho sinh viên.</p></div><a class="button secondary" href="catalog.html">Xem catalog →</a></div><div class="admin-grid"><section class="admin-form-card"><h2>Thêm giáo trình</h2><form id="bookForm" class="book-form"><label>Tên giáo trình<input name="title" required placeholder="Ví dụ: Mạng máy tính" /></label><div class="form-row"><label>Mã môn<input name="code" required placeholder="IT301" /></label><label>Khoa<select name="faculty"><option>Khoa Công nghệ thông tin</option><option>Khoa Công nghệ Điện</option><option>Khoa Công nghệ Điện tử</option><option>Khoa Công nghệ Động lực</option><option>Khoa Công nghệ Nhiệt - Lạnh</option><option>Khoa Công nghệ May - Thời trang</option><option>Khoa Công nghệ Hóa học</option><option>Khoa Khoa học Cơ bản</option><option>Khoa Luật và Khoa học chính trị</option><option>Khoa Ngoại ngữ</option><option>Khoa Quản trị Kinh doanh</option><option>Khoa Thương mại - Du lịch</option><option>Khoa Kỹ thuật Xây dựng</option><option>Khoa Khoa học Sức khỏe</option></select></label></div><label>Tác giả / đơn vị biên soạn<input name="author" required placeholder="Bộ môn hoặc giảng viên" /></label><div class="form-row"><label>Giá bán<input name="price" type="number" min="0" required placeholder="45000" /></label><label>Giá thuê / kỳ<input name="rent" type="number" min="0" required placeholder="25000" /></label></div><label>Hình thức cung cấp<select name="availability"><option value="both">Bán và thuê</option><option value="buy">Chỉ bán</option><option value="rent">Chỉ thuê</option></select></label><div class="form-row"><label>Độ mới sách<select name="condition"><option value="new">Mới 100%</option><option value="over80">Trên 80%</option><option value="over60">Trên 60%</option></select></label><label>Tồn kho<input name="stock" type="number" min="0" value="10" required /></label></div><label>Ảnh bìa (URL)<input name="image" type="url" placeholder="https://..." /></label><label>Mô tả<textarea name="description" rows="3" placeholder="Mô tả ngắn về giáo trình"></textarea></label><button class="button primary full-width" type="submit">Thêm vào catalog <span>+</span></button><p class="form-message success" id="adminMessage" hidden></p></form></section><section class="admin-list-card"><div class="admin-list-head"><div><h2>Danh sách hiện có</h2><p id="bookCount"></p></div><button class="text-button" id="restoreBooks" type="button">Bổ sung sách mẫu</button></div><div id="adminBookList" class="admin-book-list"></div></section></div><section class="admin-list-card admin-orders-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderList" class="admin-order-list"></div></section></main>
-    <script src="assets/js/book-store.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script>
-    <script src="assets/js/admin.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard quản trị | IUH EduBook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="admin-page">
+  <header class="admin-header"><div class="container admin-header-inner"><a class="brand" href="index.html"><span class="brand-mark"><img src="assets/images/LOGO-transparent.png" alt="" /></span><span><strong>IUH EduBook</strong><small>TRANG QUẢN TRỊ</small></span></a><div class="admin-account"><span class="avatar">AD</span><span><strong id="adminName">Quản trị EduBook</strong><small id="adminRole">Đang tải...</small></span><button class="text-button" id="logoutButton" type="button">Đăng xuất</button></div></div></header>
+  <main class="admin-main container">
+    <div class="admin-heading"><div><p class="eyebrow blue-text">Quản trị EduBook</p><h1>Dashboard</h1><p>Quản lý sách, yêu cầu đặt và tài khoản trên một nơi.</p></div><a class="button secondary" href="catalog.html">Xem catalog →</a></div>
+    <div class="admin-stats" aria-label="Tổng quan"><div><span>Giáo trình</span><strong id="statBooks">—</strong></div><div><span>Yêu cầu đặt</span><strong id="statOrders">—</strong></div><div><span>Sinh viên</span><strong id="statStudents">—</strong></div><div><span>SubAdmin</span><strong id="statSubadmins">—</strong></div></div>
+    <nav class="admin-tabs" aria-label="Các mục quản trị" role="tablist">
+      <button id="tabBooks" type="button" role="tab" aria-controls="panelBooks" aria-selected="true" data-admin-tab="books">Giáo trình</button>
+      <button id="tabOrders" type="button" role="tab" aria-controls="panelOrders" aria-selected="false" data-admin-tab="orders">Yêu cầu đặt</button>
+      <button id="tabStudents" type="button" role="tab" aria-controls="panelStudents" aria-selected="false" data-admin-tab="students">Tài khoản sinh viên</button>
+      <button id="tabSubadmins" type="button" role="tab" aria-controls="panelSubadmins" aria-selected="false" data-admin-tab="subadmins" data-root-only hidden>Quản lý SubAdmin</button>
+    </nav>
+    <p class="admin-notice" id="adminNotice" role="status" hidden></p>
+    <section id="panelBooks" role="tabpanel" aria-labelledby="tabBooks" data-admin-panel="books">
+      <div class="admin-grid">
+        <section class="admin-form-card"><h2>Thêm giáo trình</h2><form id="bookForm" class="book-form">
+          <label>Tên giáo trình<input name="title" required placeholder="Ví dụ: Mạng máy tính" /></label>
+          <div class="form-row"><label>Mã môn<input name="code" required placeholder="IT301" /></label><label>Khoa<select name="faculty"><option>Khoa Công nghệ thông tin</option><option>Khoa Công nghệ Điện</option><option>Khoa Công nghệ Điện tử</option><option>Khoa Công nghệ Động lực</option><option>Khoa Công nghệ Nhiệt - Lạnh</option><option>Khoa Công nghệ May - Thời trang</option><option>Khoa Công nghệ Hóa học</option><option>Khoa Khoa học Cơ bản</option><option>Khoa Luật và Khoa học chính trị</option><option>Khoa Ngoại ngữ</option><option>Khoa Quản trị Kinh doanh</option><option>Khoa Thương mại - Du lịch</option><option>Khoa Kỹ thuật Xây dựng</option><option>Khoa Khoa học Sức khỏe</option></select></label></div>
+          <label>Tác giả / đơn vị biên soạn<input name="author" required placeholder="Bộ môn hoặc giảng viên" /></label>
+          <div class="form-row"><label>Giá bán<input name="price" type="number" min="0" required placeholder="45000" /></label><label>Giá thuê / kỳ<input name="rent" type="number" min="0" required placeholder="25000" /></label></div>
+          <label>Hình thức cung cấp<select name="availability"><option value="both">Bán và thuê</option><option value="buy">Chỉ bán</option><option value="rent">Chỉ thuê</option></select></label>
+          <div class="form-row"><label>Độ mới sách<select name="condition"><option value="new">Mới 100%</option><option value="over80">Trên 80%</option><option value="over60">Trên 60%</option></select></label><label>Tồn kho<input name="stock" type="number" min="0" value="10" required /></label></div>
+          <label>Ảnh bìa (URL)<input name="image" type="url" placeholder="https://..." /></label><label>Mô tả<textarea name="description" rows="3" placeholder="Mô tả ngắn về giáo trình"></textarea></label>
+          <button class="button primary full-width" type="submit">Thêm vào catalog <span>+</span></button><p class="form-message success" id="adminMessage" role="status" hidden></p>
+        </form></section>
+        <section class="admin-list-card"><div class="admin-list-head"><div><h2>Danh sách hiện có</h2><p id="bookCount">Đang tải...</p></div><button class="text-button" id="restoreBooks" type="button">Bổ sung sách mẫu</button></div>
+          <div class="admin-list-tools"><label for="bookSearch">Tìm sách<input id="bookSearch" type="search" placeholder="Tên sách, mã môn, khoa..." /></label><fieldset class="admin-page-size"><legend>Sách / trang</legend><button type="button" data-page-size="20" aria-pressed="true">20</button><button type="button" data-page-size="50" aria-pressed="false">50</button><button type="button" data-page-size="100" aria-pressed="false">100</button></fieldset></div>
+          <div id="adminBookList" class="admin-book-list"></div><div class="admin-pagination"><span id="bookPageInfo"></span><div><button id="bookPrev" type="button">← Trước</button><button id="bookNext" type="button">Sau →</button></div></div>
+        </section>
+      </div>
+    </section>
+    <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
+    <section id="panelStudents" role="tabpanel" aria-labelledby="tabStudents" data-admin-panel="students" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Tài khoản sinh viên</h2><p id="studentCount">Đang tải...</p></div></div><label class="admin-account-search" for="studentSearch">Tìm sinh viên<input id="studentSearch" type="search" placeholder="Tên, email hoặc mã sinh viên" /></label><div id="studentList" class="admin-people-list"></div></div></section>
+    <section id="panelSubadmins" role="tabpanel" aria-labelledby="tabSubadmins" data-admin-panel="subadmins" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Quản lý SubAdmin</h2><p>SubAdmin quản lý giáo trình, yêu cầu đặt và tài khoản sinh viên.</p></div></div><form id="promoteForm" class="admin-promote"><label for="promoteEmail">Cấp quyền cho tài khoản đã đăng ký<input id="promoteEmail" type="email" required placeholder="email@example.com" /></label><button class="button primary" type="submit">Cấp quyền</button></form><p class="admin-hint">Người được cấp quyền dùng trang đăng nhập chung. Chỉ admin chính có thể cấp hoặc thu hồi quyền.</p><div id="subadminList" class="admin-people-list"></div></div></section>
+  </main>
+  <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/admin.js"></script>
+</body>
 </html>

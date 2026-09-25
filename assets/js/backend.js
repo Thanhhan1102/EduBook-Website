@@ -73,10 +73,22 @@
     const db = await requireClient();
     return unwrap(await db.from('orders').update({ status }).eq('id', id).select('id,status').single());
   };
+  const getAdminAccounts = async () => {
+    const db = await requireClient();
+    return unwrap(await db.rpc('list_admin_accounts'));
+  };
+  const setStudentActive = async (id, active) => {
+    const db = await requireClient();
+    return unwrap(await db.rpc('set_student_active', { p_user_id: id, p_active: active }));
+  };
+  const setSubadminRole = async (id, role) => {
+    const db = await requireClient();
+    return unwrap(await db.rpc('set_subadmin_role', { p_user_id: id, p_role: role }));
+  };
 
   window.eduBackend = {
     ready, get client() { return client; }, get error() { return errorMessage; },
     requireClient, getBooks, saveBook, archiveBook, addMissingSeeds,
-    placeOrder, getOrders, setOrderStatus
+    placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole
   };
 })();

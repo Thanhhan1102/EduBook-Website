@@ -4,7 +4,7 @@ Website mua và thuê giáo trình cho sinh viên IUH. Frontend là HTML/CSS/Jav
 
 ## Thiết lập Supabase
 
-Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, nạp `supabase/seed.sql`, sau đó đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Nếu Supabase đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql`. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
+Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, tiếp đến `supabase/migrations/202609250002_admin_dashboard.sql`, rồi nạp `supabase/seed.sql`. Nếu đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql` trước migration dashboard. Đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
 
 ## Chạy local
 
@@ -21,7 +21,7 @@ npx vercel dev
 - `index.html`: trang chủ.
 - `catalog.html`: danh mục bán/thuê, giỏ hàng và yêu cầu đặt sách.
 - `login.html`, `register.html`, `profile.html`: tài khoản sinh viên và quản trị.
-- `admin.html`: thêm/gỡ sách, xem và cập nhật trạng thái yêu cầu.
+- `admin.html`: dashboard theo tab, quản lý sách, đơn, sinh viên và SubAdmin; danh sách sách có chọn 20/50/100 cuốn mỗi trang.
 - `assets/js/backend.js`: client Supabase và các thao tác dữ liệu.
 - `api/config.js`: cung cấp URL và publishable key cho browser từ biến môi trường Vercel.
 - `supabase/migrations/`: schema, RLS và hàm đặt sách có khóa tồn kho.

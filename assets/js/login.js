@@ -13,6 +13,5 @@ loginForm?.addEventListener('submit', async (event) => {
     loginMessage.hidden = false;
     return;
   }
-  const next = new URLSearchParams(window.location.search).get('next');
-  window.location.href = next === 'admin' || result.session.role === 'admin' ? 'admin.html' : 'catalog.html';
+  window.location.href = ['admin', 'subadmin'].includes(result.session.role) ? 'admin.html' : 'catalog.html';
 });

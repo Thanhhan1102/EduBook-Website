@@ -6,12 +6,13 @@
     email: user.email,
     role: profile.role,
     name: profile.full_name,
-    subtitle: profile.role === 'admin' ? 'Quản trị EduBook' : profile.student_id,
+    subtitle: profile.role === 'admin' ? 'Admin chính' : profile.role === 'subadmin' ? 'SubAdmin EduBook' : profile.student_id,
     studentId: profile.student_id,
     faculty: profile.faculty,
     phone: profile.phone || '',
     birthday: profile.birthday || '',
-    address: profile.address || ''
+    address: profile.address || '',
+    active: profile.active !== false
   });
 
   const loadSession = async (user) => {
@@ -20,6 +21,11 @@
     const { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).single();
     if (error) throw error;
     currentSession = fromProfile(user, profile);
+    if (!currentSession.active) {
+      await db.auth.signOut();
+      currentSession = null;
+      throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ admin EduBook.');
+    }
     return currentSession;
   };
 
@@ -73,10 +79,10 @@
     }
   };
   const getSession = () => currentSession;
-  const accountDestination = (session) => session?.role === 'admin' ? 'admin.html' : session ? 'catalog.html' : 'login.html';
+  const accountDestination = (session) => ['admin', 'subadmin'].includes(session?.role) ? 'admin.html' : session ? 'catalog.html' : 'login.html';
   const requireAdmin = async () => {
     await ready;
-    if (currentSession?.role === 'admin') return currentSession;
+    if (['admin', 'subadmin'].includes(currentSession?.role)) return currentSession;
     window.location.replace('login.html?next=admin');
     return null;
   };
@@ -87,7 +93,7 @@
       const session = getSession();
       const name = session?.name || 'Đăng nhập';
       const subtitle = session?.subtitle || 'Tài khoản EduBook';
-      const initials = session?.role === 'admin' ? 'AD' : session?.name
+      const initials = ['admin', 'subadmin'].includes(session?.role) ? (session.role === 'admin' ? 'AD' : 'SA') : session?.name
         ? session.name.split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase()
         : '↗';
       profile.setAttribute('aria-label', session ? `Mở tài khoản ${name}` : 'Đăng nhập EduBook');

@@ -6,13 +6,13 @@ async function renderAccount() {
   const session = window.eduAuth.getSession();
   if (!session) { window.location.replace('login.html'); return; }
 
-  const isAdmin = session.role === 'admin';
-  document.querySelector('#profileInitials').textContent = isAdmin ? 'AD' : session.name.split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase();
+  const isAdmin = ['admin', 'subadmin'].includes(session.role);
+  document.querySelector('#profileInitials').textContent = isAdmin ? (session.role === 'admin' ? 'AD' : 'SA') : session.name.split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase();
   document.querySelector('#profileName').textContent = session.name;
   document.querySelector('#profileSubtitle').textContent = session.subtitle;
   document.querySelector('#profileEmail').textContent = session.email;
-  document.querySelector('#profileRole').textContent = isAdmin ? 'Quản trị viên EduBook' : 'Sinh viên IUH';
-  document.querySelector('#profileRoleDetail').textContent = isAdmin ? 'Quản trị viên' : 'Sinh viên';
+  document.querySelector('#profileRole').textContent = session.role === 'admin' ? 'Admin chính EduBook' : session.role === 'subadmin' ? 'SubAdmin EduBook' : 'Sinh viên IUH';
+  document.querySelector('#profileRoleDetail').textContent = session.role === 'admin' ? 'Admin chính' : session.role === 'subadmin' ? 'SubAdmin' : 'Sinh viên';
   document.querySelector('#profileId').textContent = session.studentId || 'Chưa cập nhật';
   document.querySelector('#profileFaculty').textContent = session.faculty || 'Chưa cập nhật';
   document.querySelector('#profilePhone').textContent = session.phone || 'Chưa cập nhật';

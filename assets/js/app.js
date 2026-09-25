@@ -144,7 +144,7 @@ async function requireTransaction() {
   if (!window.eduBackend.client) { showToast(window.eduBackend.error || 'Chưa kết nối Supabase.'); return false; }
   if (!catalogReady) { showToast('Kho sách chưa tải xong. Vui lòng thử lại.'); return false; }
   if (window.eduAuth.getSession()?.role === 'student') return true;
-  if (window.eduAuth.getSession()?.role === 'admin') { showToast('Tài khoản quản trị không thể đặt sách.'); return false; }
+  if (['admin', 'subadmin'].includes(window.eduAuth.getSession()?.role)) { showToast('Tài khoản quản trị không thể đặt sách.'); return false; }
   showToast('Hãy đăng nhập hoặc đăng ký tài khoản trước khi giao dịch.');
   clearTimeout(authRedirectTimer);
   authRedirectTimer = setTimeout(() => { window.location.href = 'login.html?next=catalog'; }, 900);
