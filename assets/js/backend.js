@@ -66,6 +66,11 @@
     const db = await requireClient();
     return unwrap(await db.from('books').insert(bookToRow(book)).select().single());
   };
+  const updateBook = async (book) => {
+    const db = await requireClient();
+    const { id, active, ...changes } = bookToRow(book);
+    return unwrap(await db.from('books').update(changes).eq('id', id).select().single());
+  };
   const archiveBook = async (id) => {
     const db = await requireClient();
     return unwrap(await db.from('books').update({ active: false }).eq('id', id).select('id').single());
@@ -92,10 +97,6 @@
   const deleteBookCover = async (path) => {
     const db = await requireClient();
     return unwrap(await db.storage.from(coverBucket).remove([path]));
-  };
-  const updateBookCover = async (id, imageUrl) => {
-    const db = await requireClient();
-    return unwrap(await db.from('books').update({ image_url: imageUrl }).eq('id', id).select('id,image_url').single());
   };
   const placeOrder = async (items, contact, pickup) => {
     const db = await requireClient();
@@ -129,8 +130,8 @@
   window.eduBackend = {
     ready, get client() { return client; }, get error() { return errorMessage; },
     get authRedirectUrl() { return authRedirectUrl; },
-    requireClient, getBooks, saveBook, archiveBook, addMissingSeeds,
-    uploadBookCover, deleteBookCover, updateBookCover,
+    requireClient, getBooks, saveBook, updateBook, archiveBook, addMissingSeeds,
+    uploadBookCover, deleteBookCover,
     placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole
   };
 })();

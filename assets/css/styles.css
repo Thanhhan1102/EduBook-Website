@@ -292,9 +292,19 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
 .book-form input[type="file"]::file-selector-button { margin-right:10px; padding:8px 11px; color:#0a689d; background:#eaf7ff; border:1px solid #cbe7f6; border-radius:7px; font:inherit; font-weight:800; cursor:pointer; }
 .admin-cover-preview { display:flex; align-items:center; justify-content:center; min-height:105px; padding:10px; color:#8394a5; background:#f8fbfd; border:1px dashed #cbdce9; border-radius:10px; font-size:11px; text-align:center; }
 .admin-cover-preview img { max-width:100%; max-height:145px; object-fit:contain; border-radius:5px; }
+.admin-book-list { max-height:min(620px,70dvh); margin:14px 0; padding:0 12px; overflow-y:auto; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:#bfd5e8 transparent; background:#fafdff; border:1px solid #dce8f1; border-radius:12px; }
 .admin-book-actions { display:flex; flex-direction:column; gap:6px; align-items:stretch; }
-.edit-cover { padding:7px 9px; color:#0b78b6; background:#edf8ff; border:1px solid #cbe7f6; border-radius:7px; font-size:11px; font-weight:800; cursor:pointer; }
-.edit-cover:disabled { opacity:.55; cursor:wait; }
+.edit-book { padding:7px 9px; color:#0b78b6; background:#edf8ff; border:1px solid #cbe7f6; border-radius:7px; font-size:11px; font-weight:800; cursor:pointer; }
+.edit-book:disabled { opacity:.55; cursor:wait; }
+.admin-edit-modal { width:min(960px,calc(100% - 32px)); height:min(750px,calc(100dvh - 40px)); }
+.admin-edit-cover { align-content:center; gap:13px; }
+.admin-edit-cover p { margin:0; color:#687f92; font-size:12px; font-weight:700; }
+.admin-edit-form { align-content:start; gap:13px; scrollbar-width:thin; scrollbar-color:#bfd5e8 transparent; }
+.admin-edit-form [hidden] { display:none !important; }
+.admin-edit-form h2 { margin:0 30px 5px 0; }
+.admin-edit-form .form-row { min-width:0; }
+.admin-edit-actions { display:flex; justify-content:flex-end; gap:9px; padding-top:8px; }
+.admin-edit-actions .button { min-width:125px; }
 .admin-page-size legend { margin-bottom:6px; color:#536b83; font-size:11px; font-weight:800; }
 .admin-page-size button,.admin-pagination button,.admin-person-actions button { padding:9px 10px; color:#28577c; background:#f6faff; border:1px solid #d5e5f0; border-radius:8px; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
 .admin-page-size button[aria-pressed="true"] { color:#fff; background:#0b78b6; border-color:#0b78b6; }
@@ -334,4 +344,9 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
   .admin-promote { align-items:stretch; flex-direction:column; }
   .admin-promote .button { width:100%; }
   .admin-pagination { align-items:start; flex-direction:column; }
+  .admin-book-list { max-height:min(530px,63dvh); padding:0 9px; }
+  .admin-edit-modal { width:calc(100% - 16px); height:calc(100dvh - 20px); }
+  .admin-edit-cover { gap:3px; }
+  .admin-edit-cover p { font-size:10px; }
+  .admin-edit-actions .button { flex:1; min-width:0; padding-inline:8px; }
 }

@@ -36,7 +36,6 @@
         </form></section>
         <section class="admin-list-card"><div class="admin-list-head"><div><h2>Danh sách hiện có</h2><p id="bookCount">Đang tải...</p></div><button class="text-button" id="restoreBooks" type="button">Bổ sung sách mẫu</button></div>
           <div class="admin-list-tools"><label for="bookSearch">Tìm sách<input id="bookSearch" type="search" placeholder="Tên sách, mã môn, khoa..." /></label><fieldset class="admin-page-size"><legend>Sách / trang</legend><button type="button" data-page-size="20" aria-pressed="true">20</button><button type="button" data-page-size="50" aria-pressed="false">50</button><button type="button" data-page-size="100" aria-pressed="false">100</button></fieldset></div>
-          <input id="replaceCoverInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden aria-label="Chọn ảnh bìa mới" />
           <div id="adminBookList" class="admin-book-list"></div><div class="admin-pagination"><span id="bookPageInfo"></span><div><button id="bookPrev" type="button">← Trước</button><button id="bookNext" type="button">Sau →</button></div></div>
         </section>
       </div>
@@ -45,6 +44,26 @@
     <section id="panelStudents" role="tabpanel" aria-labelledby="tabStudents" data-admin-panel="students" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Tài khoản sinh viên</h2><p id="studentCount">Đang tải...</p></div></div><label class="admin-account-search" for="studentSearch">Tìm sinh viên<input id="studentSearch" type="search" placeholder="Tên, email hoặc mã sinh viên" /></label><div id="studentList" class="admin-people-list"></div></div></section>
     <section id="panelSubadmins" role="tabpanel" aria-labelledby="tabSubadmins" data-admin-panel="subadmins" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Quản lý SubAdmin</h2><p>SubAdmin quản lý giáo trình, yêu cầu đặt và tài khoản sinh viên.</p></div></div><form id="promoteForm" class="admin-promote"><label for="promoteEmail">Cấp quyền cho tài khoản đã đăng ký<input id="promoteEmail" type="email" required placeholder="email@example.com" /></label><button class="button primary" type="submit">Cấp quyền</button></form><p class="admin-hint">Người được cấp quyền dùng trang đăng nhập chung. Chỉ admin chính có thể cấp hoặc thu hồi quyền.</p><div id="subadminList" class="admin-people-list"></div></div></section>
   </main>
+  <dialog class="book-modal admin-edit-modal" id="editBookDialog" aria-labelledby="editBookTitle">
+    <button class="modal-close" type="button" data-close-edit aria-label="Đóng chỉnh sửa">×</button>
+    <div class="modal-layout">
+      <div class="modal-cover admin-edit-cover"><div class="modal-image-frame"><img id="editBookPreview" alt="Bìa giáo trình đang chỉnh sửa" /></div><p>Ảnh bìa giáo trình</p></div>
+      <form id="editBookForm" class="modal-info book-form admin-edit-form">
+        <p class="eyebrow blue-text">QUẢN LÝ GIÁO TRÌNH</p><h2 id="editBookTitle">Chỉnh sửa giáo trình</h2>
+        <label>Tên giáo trình<input name="title" required /></label>
+        <div class="form-row"><label>Mã môn<input name="code" required /></label><label>Khoa<select name="faculty" required></select></label></div>
+        <label>Tác giả / đơn vị biên soạn<input name="author" required /></label>
+        <div class="form-row"><label>Hình thức cung cấp<select name="availability" required><option value="both">Bán và thuê</option><option value="buy">Chỉ bán</option><option value="rent">Chỉ thuê</option></select></label><label>Độ mới sách<select name="condition" required><option value="new">Mới 100%</option><option value="over80">Trên 80%</option><option value="over60">Trên 60%</option></select></label></div>
+        <div class="form-row"><label data-edit-price="buy">Giá bán<input name="price" type="number" min="1" step="1" required /></label><label data-edit-price="rent">Giá thuê / kỳ<input name="rent" type="number" min="1" step="1" required /></label></div>
+        <div class="form-row"><label data-edit-old-price>Giá niêm yết<input name="oldPrice" type="number" min="0" step="1" /></label><label>Tồn kho<input name="stock" type="number" min="0" step="1" required /></label></div>
+        <label>Ảnh bìa từ máy<input name="coverFile" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>JPG, PNG hoặc WebP · tối đa 5 MB</small></label>
+        <label>Hoặc URL ảnh bìa<input name="image" type="url" placeholder="https://..." /><small>Nếu chọn tệp mới, ảnh tải lên được ưu tiên.</small></label>
+        <label>Mô tả<textarea name="description" rows="4"></textarea></label>
+        <p class="form-message" id="editBookMessage" role="status" hidden></p>
+        <div class="admin-edit-actions"><button class="button secondary" type="button" data-close-edit>Hủy</button><button class="button primary" type="submit">Lưu thay đổi</button></div>
+      </form>
+    </div>
+  </dialog>
   <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/admin.js"></script>
 </body>
 </html>
