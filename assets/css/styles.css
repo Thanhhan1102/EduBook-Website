@@ -278,6 +278,7 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
 .admin-list-tools > label { flex:1; }
 .admin-list-tools input,.admin-account-search input,.admin-promote input { width:100%; min-width:0; padding:10px 12px; color:var(--navy); background:#fbfdff; border:1px solid #d5e5f0; border-radius:9px; font:inherit; font-size:12px; outline-color:var(--blue); }
 .admin-page-size { display:flex; gap:3px; margin:0; padding:0; border:0; }
+.admin-price-row.is-single { grid-template-columns:1fr; }
 .admin-page-size legend { margin-bottom:6px; color:#536b83; font-size:11px; font-weight:800; }
 .admin-page-size button,.admin-pagination button,.admin-person-actions button { padding:9px 10px; color:#28577c; background:#f6faff; border:1px solid #d5e5f0; border-radius:8px; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
 .admin-page-size button[aria-pressed="true"] { color:#fff; background:#0b78b6; border-color:#0b78b6; }

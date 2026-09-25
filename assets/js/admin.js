@@ -9,6 +9,7 @@ const money = (amount) => `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const conditionText = (book) => ({ new: 'Mới 100%', over80: 'Độ mới trên 80%', over60: 'Độ mới trên 60%' }[book.condition] || 'Mới 100%');
 const availabilityText = (book) => ({ buy: 'Chỉ bán', rent: 'Chỉ thuê', both: 'Bán và thuê' }[book.availability] || 'Bán và thuê');
+const bookPriceText = (book) => book.availability === 'buy' ? money(book.price) : book.availability === 'rent' ? `thuê ${money(book.rent)}/kỳ` : `${money(book.price)} · thuê ${money(book.rent)}/kỳ`;
 const statusText = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', ready: 'Sẵn sàng nhận', completed: 'Hoàn tất', cancelled: 'Đã hủy' };
 
 function showAdminMessage(message, isError = false) {
@@ -45,7 +46,7 @@ function drawBooks() {
   const visible = filtered.slice(start, start + adminState.pageSize);
   adminCount.textContent = `${filtered.length} / ${adminState.books.length} giáo trình đang hiển thị`;
   document.querySelector('#statBooks').textContent = adminState.books.length;
-  adminList.innerHTML = visible.length ? visible.map((book) => `<article class="admin-book"><img src="${escapeHtml(book.image)}" alt="" /><div><span>${escapeHtml(book.faculty)} · ${escapeHtml(book.code)}</span><h3>${escapeHtml(book.title)}</h3><p>${escapeHtml(book.author)}</p><strong>${money(book.price)} · thuê ${money(book.rent)}/kỳ</strong><small class="admin-book-meta">${conditionText(book)} · Tồn kho: ${book.stock} cuốn · ${availabilityText(book)}</small></div><button class="delete-book" type="button" data-delete-book="${escapeHtml(book.id)}" aria-label="Gỡ ${escapeHtml(book.title)}">Gỡ</button></article>`).join('') : '<p class="admin-empty">Không tìm thấy giáo trình.</p>';
+  adminList.innerHTML = visible.length ? visible.map((book) => `<article class="admin-book"><img src="${escapeHtml(book.image)}" alt="" /><div><span>${escapeHtml(book.faculty)} · ${escapeHtml(book.code)}</span><h3>${escapeHtml(book.title)}</h3><p>${escapeHtml(book.author)}</p><strong>${bookPriceText(book)}</strong><small class="admin-book-meta">${conditionText(book)} · Tồn kho: ${book.stock} cuốn · ${availabilityText(book)}</small></div><button class="delete-book" type="button" data-delete-book="${escapeHtml(book.id)}" aria-label="Gỡ ${escapeHtml(book.title)}">Gỡ</button></article>`).join('') : '<p class="admin-empty">Không tìm thấy giáo trình.</p>';
   document.querySelector('#bookPageInfo').textContent = filtered.length ? `Trang ${adminState.page}/${pages} · Sách ${start + 1}–${start + visible.length} trong ${filtered.length}` : '0 giáo trình';
   document.querySelector('#bookPrev').disabled = adminState.page === 1;
   document.querySelector('#bookNext').disabled = adminState.page >= pages;
@@ -101,16 +102,37 @@ async function renderAccounts() {
   }
 }
 
+function syncPriceFields() {
+  const availability = adminForm.elements.availability.value;
+  const priceRow = document.querySelector('#adminPriceRow');
+  const showBuy = ['buy', 'both'].includes(availability);
+  const showRent = ['rent', 'both'].includes(availability);
+  priceRow.hidden = !showBuy && !showRent;
+  priceRow.classList.toggle('is-single', showBuy !== showRent);
+  for (const [mode, show] of [['buy', showBuy], ['rent', showRent]]) {
+    const label = priceRow.querySelector(`[data-price-field="${mode}"]`);
+    const input = label.querySelector('input');
+    label.hidden = !show;
+    input.disabled = !show;
+    input.required = show;
+  }
+}
+
+adminForm?.elements.availability.addEventListener('change', syncPriceFields);
+if (adminForm) syncPriceFields();
+
 adminForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const values = new FormData(adminForm);
-  const price = Number(values.get('price'));
+  const availability = values.get('availability');
+  const price = availability === 'rent' ? 0 : Number(values.get('price'));
+  const rent = availability === 'buy' ? 0 : Number(values.get('rent'));
   const book = {
     id: `book-${Date.now()}`,
     title: values.get('title').trim(), code: values.get('code').trim().toUpperCase(),
     faculty: values.get('faculty'), author: values.get('author').trim(),
-    condition: values.get('condition'), availability: values.get('availability'),
-    price, oldPrice: Math.round(price * 1.8), rent: Number(values.get('rent')),
+    condition: values.get('condition'), availability,
+    price, oldPrice: Math.round(price * 1.8), rent,
     stock: Number(values.get('stock')),
     image: values.get('image').trim() || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=800&q=80',
     description: values.get('description').trim() || 'Giáo trình được cập nhật bởi EduBook.'
@@ -120,6 +142,7 @@ adminForm?.addEventListener('submit', async (event) => {
   try {
     await window.eduBackend.saveBook(book);
     adminForm.reset();
+    syncPriceFields();
     await renderAdminBooks();
     showAdminMessage(`Đã thêm “${book.title}” vào catalog.`);
   } catch (error) { showAdminMessage(error.message, true); }
