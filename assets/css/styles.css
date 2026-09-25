@@ -301,6 +301,7 @@ html.motion-ready .reveal.is-visible { opacity:1; transform:translateY(0); }
 .admin-edit-cover p { margin:0; color:#687f92; font-size:12px; font-weight:700; }
 .admin-edit-form { align-content:start; gap:13px; scrollbar-width:thin; scrollbar-color:#bfd5e8 transparent; }
 .admin-edit-form [hidden] { display:none !important; }
+.filters [data-filter][hidden] { display:none !important; }
 .admin-edit-form h2 { margin:0 30px 5px 0; }
 .admin-edit-form .form-row { min-width:0; }
 .admin-edit-actions { display:flex; justify-content:flex-end; gap:9px; padding-top:8px; }

@@ -77,7 +77,7 @@ async function renderAdminOrders() {
       <article class="admin-order">
         <div><strong>${escapeHtml(order.contact_name)}</strong><small>${escapeHtml(order.student_id)} · ${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</small><small>${new Date(order.created_at).toLocaleString('vi-VN')} · ${escapeHtml(order.pickup)}</small></div>
         <ul>${order.order_items.map((item) => `<li>${escapeHtml(item.book_title)} · ${item.mode === 'rent' ? 'Thuê' : 'Mua'} × ${item.quantity}</li>`).join('')}</ul>
-        <div class="admin-order-actions"><strong>${money(order.total)} · cọc ${money(order.deposit)}</strong><select data-order-status="${escapeHtml(order.id)}" aria-label="Trạng thái đơn của ${escapeHtml(order.contact_name)}" ${['completed', 'cancelled'].includes(order.status) ? 'disabled' : ''}>${Object.entries(statusText).map(([value, label]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
+        <div class="admin-order-actions"><strong>${money(order.total)} · cọc ${order.deposit ? money(order.deposit) : 'Miễn phí'}</strong><select data-order-status="${escapeHtml(order.id)}" aria-label="Trạng thái đơn của ${escapeHtml(order.contact_name)}" ${['completed', 'cancelled'].includes(order.status) ? 'disabled' : ''}>${Object.entries(statusText).map(([value, label]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
       </article>`).join('') : '<p class="admin-empty">Chưa có yêu cầu đặt sách.</p>';
   } catch (error) { showAdminMessage(error.message, true); }
 }
@@ -125,6 +125,25 @@ function syncPriceFields() {
     input.disabled = !show;
     input.required = show;
   }
+  syncConditionOptions(adminForm);
+}
+
+function syncConditionOptions(form) {
+  const availability = form.elements.availability.value;
+  const condition = form.elements.condition;
+  const rental = availability === 'rent' || availability === 'both';
+  condition.disabled = !availability;
+  for (const option of condition.options) {
+    if (option.value !== 'new' && option.value !== 'over60') continue;
+    option.hidden = rental;
+    option.disabled = rental;
+  }
+  if (!availability || (rental && condition.value !== 'over80')) {
+    const changed = Boolean(condition.value);
+    condition.value = '';
+    return changed;
+  }
+  return false;
 }
 
 adminForm?.elements.availability.addEventListener('change', syncPriceFields);
@@ -139,6 +158,10 @@ function syncEditPriceFields() {
     label.querySelector('input').required = visible;
   }
   editForm.querySelector('[data-edit-old-price]').hidden = availability === 'rent';
+  if (syncConditionOptions(editForm)) {
+    editMessage.textContent = 'Sách cho thuê chỉ dùng độ mới trên 80%. Hãy chọn lại độ mới hoặc chuyển sang Chỉ bán.';
+    editMessage.hidden = false;
+  }
 }
 
 function setEditPreview(source) {
@@ -169,7 +192,8 @@ function openBookEditor(book) {
   editForm.elements.title.focus();
 }
 
-editForm?.elements.availability.addEventListener('change', syncEditPriceFields);
+editForm?.elements.availability.addEventListener('change', () => { editMessage.hidden = true; syncEditPriceFields(); });
+editForm?.elements.condition.addEventListener('change', () => { editMessage.hidden = true; });
 editForm?.elements.coverFile.addEventListener('change', () => {
   const file = editForm.elements.coverFile.files[0];
   setEditPreview(file || editForm.elements.image.value);
@@ -205,6 +229,12 @@ editForm?.addEventListener('submit', async (event) => {
     image: values.get('image').trim() || original.image,
     description: values.get('description').trim()
   };
+  if (availability !== 'buy' && book.condition !== 'over80') {
+    editMessage.textContent = 'Sách cho thuê phải có độ mới trên 80%.';
+    editMessage.hidden = false;
+    editForm.elements.condition.focus();
+    return;
+  }
   if (availability !== 'rent' && book.oldPrice < book.price) {
     editMessage.textContent = 'Giá niêm yết phải bằng hoặc cao hơn giá bán.';
     editMessage.hidden = false;
@@ -276,6 +306,10 @@ adminForm?.addEventListener('submit', async (event) => {
     image: values.get('image').trim() || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=800&q=80',
     description: values.get('description').trim() || 'Giáo trình được cập nhật bởi EduBook.'
   };
+  if (availability !== 'buy' && book.condition !== 'over80') {
+    showAdminMessage('Sách cho thuê phải có độ mới trên 80%.', true);
+    return;
+  }
   const submit = adminForm.querySelector('[type="submit"]');
   submit.disabled = true;
   let uploadedCover = null;

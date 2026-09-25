@@ -34,7 +34,9 @@ const conditionDetailLabels = { new: 'Mới 100%', over80: 'Trên 80%', over60: 
 const availabilityLabels = { buy: 'Chỉ bán', rent: 'Chỉ thuê', both: 'Bán và thuê' };
 
 const getAvailability = (book) => ['buy', 'rent', 'both'].includes(book.availability) ? book.availability : 'both';
-const supportsMode = (book, mode) => getAvailability(book) === 'both' || getAvailability(book) === mode;
+const supportsMode = (book, mode) =>
+  (getAvailability(book) === 'both' || getAvailability(book) === mode) &&
+  (mode !== 'rent' || getCondition(book) === 'over80');
 const getCondition = (book) => book.condition === 'pass' ? 'over80' : (conditionLabels[book.condition] ? book.condition : 'new');
 const conditionLabel = (book) => conditionLabels[getCondition(book)];
 const getStock = (book) => Math.max(0, Number.isFinite(Number(book.stock)) ? Number(book.stock) : 10);
@@ -69,6 +71,11 @@ function getVisibleBooks() {
 }
 
 function renderBooks() {
+  if (state.mode === 'rent' && ['new', 'over60'].includes(state.condition)) state.condition = 'all';
+  document.querySelectorAll('[data-filter]').forEach((button) => {
+    button.hidden = state.mode === 'rent' && ['new', 'over60'].includes(button.dataset.filter);
+    button.classList.toggle('active', button.dataset.filter === state.condition);
+  });
   const currentBooks = getVisibleBooks();
   const isRent = state.mode === 'rent';
   el('#catalogDescription').textContent = isRent
@@ -102,7 +109,7 @@ function setMode(mode) {
 function openBook(id, mode = state.mode) {
   const book = books.find((item) => item.id === id);
   if (!book) return;
-  modalMode = supportsMode(book, mode) ? mode : (getAvailability(book) === 'rent' ? 'rent' : 'buy');
+  modalMode = supportsMode(book, mode) ? mode : (supportsMode(book, 'buy') ? 'buy' : 'rent');
   renderModal(book);
   document.body.classList.add('modal-open');
   modal.showModal();
@@ -113,11 +120,11 @@ function renderModal(book) {
   const price = rent ? book.rent : book.price;
   const stock = getStock(book);
   const availability = getAvailability(book);
-  const canSwitch = availability === 'both';
+  const canSwitch = availability === 'both' && supportsMode(book, 'rent');
   const author = String(book.author || 'Chưa có tác giả').split(/\s*·\s*/)[0].replace(/\s+biên soạn$/i, '');
   const modeControl = canSwitch
     ? `<div class="mode-picker"><button class="${!rent ? 'active' : ''}" type="button" data-modal-mode="buy">▣ Mua sở hữu</button><button class="${rent ? 'active' : ''}" type="button" data-modal-mode="rent">↻ Thuê 1 học kỳ</button></div>`
-    : `<div class="single-mode-note"><span>Hình thức cung cấp</span><strong>${availabilityLabels[availability]}</strong></div>`;
+    : `<div class="single-mode-note"><span>Hình thức cung cấp</span><strong>${supportsMode(book, 'buy') ? 'Chỉ bán' : availabilityLabels[availability]}</strong></div>`;
   el('#modalContent').innerHTML = `
     <div class="modal-layout">
       <div class="modal-cover"><div class="modal-image-frame"><img src="${escapeHtml(book.image)}" alt="Bìa giáo trình ${escapeHtml(book.title)}" /></div></div>
@@ -131,7 +138,7 @@ function renderModal(book) {
           <div><span>Tồn kho</span><strong class="${stock ? 'stock-available' : 'stock-unavailable'}">${stock ? `Còn ${stock} cuốn` : 'Tạm hết sách'}</strong></div>
         </div>
         ${modeControl}
-        <div class="price-panel"><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Phí thuê 4 tháng · cọc giữ sách tính khi đặt</small>'}</div>
+        <div class="price-panel"><strong>${formatMoney(price)}${rent ? ' / kỳ' : ''}</strong>${!rent ? `<small>Giá niêm yết <s>${formatMoney(book.oldPrice)}</s></small>` : '<small>Phí thuê 4 tháng · không cần đặt cọc</small>'}</div>
         <p class="book-description">${escapeHtml(book.description)}</p>
         <ul class="modal-benefits"><li>Kiểm tra đúng học phần trước khi nhận</li><li>Nhận sách tại Nhà sách EduBook hoặc Smart Locker</li><li>Đổi trả miễn phí trong 48 giờ nếu sai học phần</li></ul>
         <button class="button ${rent ? 'green' : 'navy'} full-width" type="button" data-modal-add="${escapeHtml(book.id)}" ${stock ? '' : 'disabled'}>${stock ? (rent ? 'Thuê sách ngay' : 'Thêm vào giỏ') : 'Tạm hết sách'} <span>→</span></button>
@@ -194,11 +201,10 @@ async function openOrderModal() {
   }
   const session = window.eduAuth.getSession();
   const total = getCartTotal();
-  const deposit = Math.ceil(total * 0.2 / 1000) * 1000;
   el('#orderItemCount').textContent = `${items.reduce((sum, item) => sum + item.quantity, 0)} cuốn`;
   el('#orderSummaryItems').innerHTML = items.map(({ book, mode, quantity }) => `<div class="order-item"><img src="${escapeHtml(book.image)}" alt="" /><div><strong>${escapeHtml(book.title)}</strong><small>${mode === 'rent' ? 'Thuê 1 học kỳ' : 'Mua sở hữu'} · x${quantity}</small></div><span>${formatMoney((mode === 'rent' ? book.rent : book.price) * quantity)}</span></div>`).join('');
   el('#orderTotal').textContent = formatMoney(total);
-  el('#orderDeposit').textContent = formatMoney(deposit);
+  el('#orderDeposit').textContent = 'Miễn phí';
   el('#orderName').value = session.name || '';
   el('#orderStudentId').value = session.studentId || session.staffId || '';
   el('#orderEmail').value = session.email || '';

@@ -85,9 +85,10 @@
   };
   const normalizeBooks = (items) => items.map((book, index) => {
     const priorPass = book.condition === 'pass';
-    const condition = priorPass ? (index % 2 ? 'over80' : 'over60') : (['new', 'over80', 'over60'].includes(book.condition) ? book.condition : 'new');
+    const originalCondition = priorPass ? (index % 2 ? 'over80' : 'over60') : (['new', 'over80', 'over60'].includes(book.condition) ? book.condition : 'new');
     const stock = Number.isFinite(Number(book.stock)) ? Math.max(0, Number(book.stock)) : 6 + ((index * 7) % 19);
     const availability = ['buy', 'rent', 'both'].includes(book.availability) ? book.availability : ['both', 'buy', 'rent'][index % 3];
+    const condition = availability === 'buy' ? originalCondition : 'over80';
     return { ...book, faculty: facultyMap[book.faculty] || book.faculty, condition, stock, availability };
   });
   const normalizedSeeds = normalizeBooks(clone(seedBooks));
