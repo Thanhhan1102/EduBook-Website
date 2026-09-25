@@ -89,7 +89,7 @@ async function main() {
     }
   ];
   for (const account of accounts) {
-    if (!/^edubook-(test|admin)-[a-f0-9]{8}@(example\.com|iuh\.edu\.vn)$/.test(account.email)
+    if (!/^edubook-(test|admin)-[a-f0-9]{8}@(example\.com|student\.iuh\.edu\.vn)$/.test(account.email)
       || account.password.length < 20) {
       throw new Error('Thông tin tài khoản tạm trong note.md không hợp lệ.');
     }
