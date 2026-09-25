@@ -130,12 +130,39 @@
     const db = await requireClient();
     return unwrap(await db.rpc('set_subadmin_role', { p_user_id: id, p_role: role }));
   };
+  const getSupportMessages = async (userId) => {
+    const db = await requireClient();
+    const messages = [];
+    const pageSize = 500;
+    for (let offset = 0; ; offset += pageSize) {
+      const page = unwrap(await db.from('support_messages').select('*')
+        .eq('user_id', userId).order('created_at', { ascending: true })
+        .order('id', { ascending: true }).range(offset, offset + pageSize - 1));
+      messages.push(...page);
+      if (page.length < pageSize) return messages;
+    }
+  };
+  const getSupportChats = async () => {
+    const db = await requireClient();
+    return unwrap(await db.rpc('list_support_chats'));
+  };
+  const sendSupportMessage = async (userId, senderRole, body) => {
+    const db = await requireClient();
+    return unwrap(await db.from('support_messages')
+      .insert({ user_id: userId, sender_role: senderRole, body: body.trim() }).select().single());
+  };
+  const markSupportRead = async (userId, senderRole) => {
+    const db = await requireClient();
+    return unwrap(await db.from('support_messages').update({ read_at: new Date().toISOString() })
+      .eq('user_id', userId).eq('sender_role', senderRole).is('read_at', null));
+  };
 
   window.eduBackend = {
     ready, get client() { return client; }, get error() { return errorMessage; },
     get authRedirectUrl() { return authRedirectUrl; },
     requireClient, getBooks, saveBook, updateBook, archiveBook, addMissingSeeds,
     uploadBookCover, deleteBookCover,
-    placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole
+    placeOrder, getOrders, setOrderStatus, getAdminAccounts, setStudentActive, setSubadminRole,
+    getSupportMessages, getSupportChats, sendSupportMessage, markSupportRead
   };
 })();

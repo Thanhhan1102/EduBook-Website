@@ -15,6 +15,7 @@
     <nav class="admin-tabs" aria-label="Các mục quản trị" role="tablist">
       <button id="tabBooks" type="button" role="tab" aria-controls="panelBooks" aria-selected="true" data-admin-tab="books">Giáo trình</button>
       <button id="tabOrders" type="button" role="tab" aria-controls="panelOrders" aria-selected="false" data-admin-tab="orders">Yêu cầu đặt <span id="adminUrgentCount" class="hold-tab-count" hidden></span></button>
+      <button id="tabChats" type="button" role="tab" aria-controls="panelChats" aria-selected="false" data-admin-tab="chats">Hỗ trợ chat <span id="adminChatUnread" class="hold-tab-count" hidden></span></button>
       <button id="tabStudents" type="button" role="tab" aria-controls="panelStudents" aria-selected="false" data-admin-tab="students">Tài khoản sinh viên</button>
       <button id="tabSubadmins" type="button" role="tab" aria-controls="panelSubadmins" aria-selected="false" data-admin-tab="subadmins" data-root-only hidden>Quản lý SubAdmin</button>
     </nav>
@@ -41,6 +42,14 @@
       </div>
     </section>
     <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderNotice" class="hold-notice" role="status" hidden></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
+    <section id="panelChats" role="tabpanel" aria-labelledby="tabChats" data-admin-panel="chats" hidden>
+      <div class="admin-list-card"><div class="admin-list-head"><div><h2>Trò chuyện hỗ trợ</h2><p>Trao đổi với sinh viên theo từng tài khoản; lịch sử được lưu trong Supabase.</p></div></div>
+        <div class="admin-chat-layout">
+          <div class="admin-chat-people"><label for="chatSearch">Tìm cuộc trò chuyện<input id="chatSearch" type="search" placeholder="Tên hoặc mã sinh viên" /></label><div id="chatThreadList" class="admin-chat-thread-list"></div></div>
+          <div class="admin-chat-conversation"><div class="admin-chat-conversation-head"><strong id="chatRecipient">Chọn tài khoản để xem cuộc trò chuyện</strong><small id="chatRecipientId"></small></div><div id="adminChatMessages" class="admin-chat-messages" role="log" aria-live="polite"><p class="admin-chat-list-empty">Tin nhắn của sinh viên sẽ xuất hiện tại đây.</p></div><p id="adminChatFeedback" class="support-chat-feedback" role="status" hidden></p><form id="adminChatForm" class="admin-chat-compose" hidden><label class="visually-hidden" for="adminChatInput">Trả lời sinh viên</label><textarea id="adminChatInput" rows="2" maxlength="2000" placeholder="Nhập câu trả lời..." required></textarea><button class="button primary" type="submit">Gửi trả lời →</button></form></div>
+        </div>
+      </div>
+    </section>
     <section id="panelStudents" role="tabpanel" aria-labelledby="tabStudents" data-admin-panel="students" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Tài khoản sinh viên</h2><p id="studentCount">Đang tải...</p></div></div><label class="admin-account-search" for="studentSearch">Tìm sinh viên<input id="studentSearch" type="search" placeholder="Tên, email hoặc mã sinh viên" /></label><div id="studentList" class="admin-people-list"></div></div></section>
     <section id="panelSubadmins" role="tabpanel" aria-labelledby="tabSubadmins" data-admin-panel="subadmins" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Quản lý SubAdmin</h2><p>SubAdmin quản lý giáo trình, yêu cầu đặt và tài khoản sinh viên.</p></div></div><form id="promoteForm" class="admin-promote"><label for="promoteEmail">Cấp quyền cho tài khoản đã đăng ký<input id="promoteEmail" type="email" required placeholder="email@example.com" /></label><button class="button primary" type="submit">Cấp quyền</button></form><p class="admin-hint">Người được cấp quyền dùng trang đăng nhập chung. Chỉ admin chính có thể cấp hoặc thu hồi quyền.</p><div id="subadminList" class="admin-people-list"></div></div></section>
   </main>
@@ -64,6 +73,6 @@
       </form>
     </div>
   </dialog>
-  <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/order-holds.js"></script><script src="assets/js/admin.js"></script>
+  <script src="assets/js/book-store.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/backend.js"></script><script src="assets/js/auth.js"></script><script src="assets/js/order-holds.js"></script><script src="assets/js/admin-chat.js"></script><script src="assets/js/admin.js"></script>
 </body>
 </html>

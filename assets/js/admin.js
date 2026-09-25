@@ -42,6 +42,7 @@ function selectTab(name) {
     panel.hidden = panel.dataset.adminPanel !== name;
   });
   history.replaceState(null, '', `#${name}`);
+  window.eduAdminChat?.onTabChange(name);
 }
 
 function drawBooks() {
@@ -454,8 +455,9 @@ window.eduAuth.requireAdmin().then((session) => {
   document.querySelector('#adminName').textContent = session.name;
   document.querySelector('#adminRole').textContent = session.role === 'admin' ? 'Admin chính' : 'SubAdmin';
   document.querySelectorAll('[data-root-only]').forEach((item) => { item.hidden = session.role !== 'admin'; });
-  const initialTab = ['books', 'orders', 'students', 'subadmins'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'books';
+  const initialTab = ['books', 'orders', 'chats', 'students', 'subadmins'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'books';
   selectTab(initialTab);
+  window.eduAdminChat?.start();
   renderAdminBooks();
   renderAdminOrders();
   renderAccounts();
