@@ -86,7 +86,7 @@
     document.querySelectorAll('.profile').forEach((profile) => {
       const session = getSession();
       const name = session?.name || 'Đăng nhập';
-      const subtitle = session?.subtitle || 'Tài khoản IUH';
+      const subtitle = session?.subtitle || 'Tài khoản EduBook';
       const initials = session?.role === 'admin' ? 'AD' : session?.name
         ? session.name.split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase()
         : '↗';

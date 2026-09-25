@@ -70,7 +70,7 @@ async function main() {
   const adminSection = getSection(note, 'Tài khoản admin');
   const accounts = [
     {
-      email: getField(studentSection, 'Email IUH'),
+      email: getField(studentSection, 'Email'),
       password: getField(studentSection, 'Mật khẩu tạm'),
       studentId: getField(studentSection, 'Mã số sinh viên test'),
       name: 'Sinh viên Test EduBook',
@@ -79,7 +79,7 @@ async function main() {
       pending: 'CHƯA TẠO trong Supabase'
     },
     {
-      email: getField(adminSection, 'Email IUH'),
+      email: getField(adminSection, 'Email'),
       password: getField(adminSection, 'Mật khẩu tạm'),
       studentId: getField(adminSection, 'Mã số test'),
       name: 'Quản trị Test EduBook',
@@ -89,7 +89,7 @@ async function main() {
     }
   ];
   for (const account of accounts) {
-    if (!/^edubook-(test|admin)-[a-f0-9]{8}@iuh\.edu\.vn$/.test(account.email)
+    if (!/^edubook-(test|admin)-[a-f0-9]{8}@(example\.com|iuh\.edu\.vn)$/.test(account.email)
       || account.password.length < 20) {
       throw new Error('Thông tin tài khoản tạm trong note.md không hợp lệ.');
     }

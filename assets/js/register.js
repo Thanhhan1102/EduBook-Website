@@ -9,11 +9,6 @@ registerForm?.addEventListener('submit', async (event) => {
     registerMessage.hidden = false;
     return;
   }
-  if (!/^[^@\s]+@iuh\.edu\.vn$/i.test(values.email.trim())) {
-    registerMessage.textContent = 'Vui lòng dùng email IUH (@iuh.edu.vn).';
-    registerMessage.hidden = false;
-    return;
-  }
   const submit = registerForm.querySelector('[type="submit"]');
   submit.disabled = true;
   const result = await window.eduAuth.register(values);

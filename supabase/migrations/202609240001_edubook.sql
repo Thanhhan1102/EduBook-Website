@@ -63,9 +63,6 @@ returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  if lower(new.email) !~ '^[^@]+@iuh\.edu\.vn$' then
-    raise exception 'Chỉ email IUH được đăng ký.';
-  end if;
   insert into public.profiles (id, full_name, student_id, faculty, role)
   values (
     new.id,

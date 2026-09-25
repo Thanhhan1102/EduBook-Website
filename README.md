@@ -4,7 +4,7 @@ Website mua và thuê giáo trình cho sinh viên IUH. Frontend là HTML/CSS/Jav
 
 ## Thiết lập Supabase
 
-Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Cần chạy `supabase/migrations/202609240001_edubook.sql`, nạp `supabase/seed.sql`, sau đó đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
+Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, nạp `supabase/seed.sql`, sau đó đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Nếu Supabase đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql`. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
 
 ## Chạy local
 
