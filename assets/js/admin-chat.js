@@ -45,7 +45,7 @@
     const follow = !messageIds || messagesBox.scrollHeight - messagesBox.scrollTop - messagesBox.clientHeight < 80;
     messageIds = ids;
     messagesBox.innerHTML = messages.length ? messages.map((message) => `
-      <div class="support-message ${message.sender_role === 'student' ? 'mine' : 'theirs'}">
+      <div class="support-message ${message.sender_role === 'staff' ? 'mine' : 'theirs'}">
         <span class="support-message-author">${message.sender_role === 'student' ? 'Sinh viên' : 'EduBook'}</span>
         <div class="support-message-bubble">${escapeHtml(message.body)}</div>
         <time datetime="${escapeHtml(message.created_at)}">${timeText(message.created_at)}</time>
