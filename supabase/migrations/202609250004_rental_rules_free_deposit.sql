@@ -6,7 +6,7 @@ language plpgsql set search_path = ''
 as $$
 begin
   if new.availability in ('rent', 'both') and new.condition <> 'over80' then
-    raise exception 'Sách cho thuê phải có độ mới trên 80%.';
+    raise exception 'Sách cho thuê phải có độ mới trên 80%%.';
   end if;
   return new;
 end;
