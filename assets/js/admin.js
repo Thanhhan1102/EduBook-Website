@@ -1,4 +1,4 @@
-const adminState = { books: [], accounts: [], orders: [], page: 1, pageSize: 20, role: null };
+const adminState = { books: [], accounts: [], orders: [], page: 1, pageSize: 20, orderFilter: 'all', orderSort: 'newest', orderQuery: '', role: null };
 const adminList = document.querySelector('#adminBookList');
 const adminCount = document.querySelector('#bookCount');
 const adminForm = document.querySelector('#bookForm');
@@ -20,6 +20,9 @@ const conditionText = (book) => ({ new: 'Mới 100%', over80: 'Độ mới trên
 const availabilityText = (book) => ({ buy: 'Chỉ bán', rent: 'Chỉ thuê', both: 'Bán và thuê' }[book.availability] || 'Bán và thuê');
 const bookPriceText = (book) => book.availability === 'buy' ? money(book.price) : book.availability === 'rent' ? `thuê ${money(book.rent)}/kỳ` : `${money(book.price)} · thuê ${money(book.rent)}/kỳ`;
 const statusText = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', ready: 'Sẵn sàng nhận', completed: 'Hoàn tất', cancelled: 'Đã hủy' };
+const orderStages = ['pending', 'confirmed', 'ready', 'completed'];
+const nextOrderStatus = { pending: 'confirmed', confirmed: 'ready', ready: 'completed' };
+const nextOrderText = { confirmed: 'Xác nhận đơn', ready: 'Sẵn sàng nhận', completed: 'Hoàn tất đơn' };
 
 function showAdminMessage(message, isError = false) {
   const notice = document.querySelector('#adminNotice');
@@ -81,19 +84,61 @@ function updateAdminOrderNotice() {
   count.textContent = attentionCount;
 }
 
+function orderMatchesFilter(order, filter) {
+  const hold = window.eduOrderHolds;
+  if (filter === 'all') return true;
+  if (filter === 'expired') return Boolean(order.expired_at);
+  if (filter === 'urgent') {
+    const remaining = hold.remainingMs(order);
+    return hold.isActive(order) && remaining !== null && remaining <= 2 * 60 * 60 * 1000;
+  }
+  return order.status === filter;
+}
+
+function orderProgress(order) {
+  if (order.status === 'cancelled') return `<p class="admin-order-cancelled">${order.expired_at ? 'Hết 24 giờ giữ sách · tồn kho đã hoàn lại' : 'Đơn đã hủy · tồn kho đã hoàn lại'}</p>`;
+  const current = orderStages.indexOf(order.status);
+  return `<ol class="admin-order-progress" aria-label="Tiến trình đơn sách">${orderStages.map((stage, index) => `
+    <li class="${index < current ? 'is-done' : index === current ? 'is-current' : ''}"><span>${index < current ? '✓' : index + 1}</span>${statusText[stage]}</li>`).join('')}</ol>`;
+}
+
 function drawAdminOrders() {
-  const orders = adminState.orders;
-  orderCount.textContent = `${orders.length} yêu cầu đặt sách`;
-  document.querySelector('#statOrders').textContent = orders.length;
+  const allOrders = adminState.orders;
+  const filters = [
+    ['all', 'Tất cả'], ['pending', 'Chờ xác nhận'], ['confirmed', 'Đã xác nhận'],
+    ['ready', 'Sẵn sàng nhận'], ['urgent', 'Sắp hết hạn'],
+    ['completed', 'Hoàn tất'], ['cancelled', 'Đã hủy'], ['expired', 'Hết hạn']
+  ];
+  document.querySelector('#orderStatusFilters').innerHTML = filters.map(([key, label]) => {
+    const count = allOrders.filter((order) => orderMatchesFilter(order, key)).length;
+    return `<button type="button" data-order-filter="${key}" aria-pressed="${adminState.orderFilter === key}">${label} <span>${count}</span></button>`;
+  }).join('');
+  const query = adminState.orderQuery.toLocaleLowerCase('vi');
+  const orders = allOrders.filter((order) => orderMatchesFilter(order, adminState.orderFilter)
+    && [order.id, order.contact_name, order.student_id, order.email, order.phone, order.pickup,
+      ...(order.order_items || []).map((item) => item.book_title)]
+      .some((value) => String(value || '').toLocaleLowerCase('vi').includes(query)));
+  orders.sort((a, b) => {
+    if (adminState.orderSort === 'oldest') return Date.parse(a.created_at) - Date.parse(b.created_at);
+    if (adminState.orderSort === 'deadline') {
+      const deadline = (order) => window.eduOrderHolds.isActive(order) ? Date.parse(order.expires_at || '') || Infinity : Infinity;
+      return deadline(a) - deadline(b) || Date.parse(b.created_at) - Date.parse(a.created_at);
+    }
+    return Date.parse(b.created_at) - Date.parse(a.created_at);
+  });
+  orderCount.textContent = `${orders.length} / ${allOrders.length} yêu cầu đang hiển thị`;
+  document.querySelector('#statOrders').textContent = allOrders.length;
   orderList.innerHTML = orders.length ? orders.map((order) => {
     const hold = window.eduOrderHolds;
     const ended = ['completed', 'cancelled'].includes(order.status) || (hold.isActive(order) && hold.remainingMs(order) === 0);
-    return `<article class="admin-order" data-order-hold="${escapeHtml(order.id)}">
-      <div><strong>${escapeHtml(order.contact_name)}</strong><small>${escapeHtml(order.student_id)} · ${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</small><small>${new Date(order.created_at).toLocaleString('vi-VN')} · ${escapeHtml(order.pickup)}</small><span class="hold-status" data-hold-status>${escapeHtml(hold.statusLabel(order))}</span>${hold.countdownHtml(order)}</div>
-      <ul>${order.order_items.map((item) => `<li>${escapeHtml(item.book_title)} · ${item.mode === 'rent' ? 'Thuê' : 'Mua'} × ${item.quantity}</li>`).join('')}</ul>
-      <div class="admin-order-actions"><strong>${money(order.total)} · cọc ${order.deposit ? money(order.deposit) : 'Miễn phí'}</strong><select data-order-status="${escapeHtml(order.id)}" aria-label="Trạng thái đơn của ${escapeHtml(order.contact_name)}" ${ended ? 'disabled' : ''}>${Object.entries(statusText).map(([value, label]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
+    const next = nextOrderStatus[order.status];
+    return `<article class="admin-order-card" data-order-hold="${escapeHtml(order.id)}">
+      <header class="admin-order-card-head"><div><small>Đơn #${escapeHtml(order.id.slice(0, 8))} · ${new Date(order.created_at).toLocaleString('vi-VN')}</small><h3>${escapeHtml(order.contact_name)}</h3><p>${escapeHtml(order.student_id)} · ${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</p></div><div class="admin-order-status"><span class="admin-order-status-pill status-${escapeHtml(order.status)}" data-hold-status>${escapeHtml(hold.statusLabel(order))}</span>${hold.countdownHtml(order)}</div></header>
+      ${orderProgress(order)}
+      <div class="admin-order-details"><div><span class="admin-order-label">Sách đã đặt</span><ul>${(order.order_items || []).map((item) => `<li><strong>${escapeHtml(item.book_title)}</strong><span>${item.mode === 'rent' ? 'Thuê' : 'Mua'} · ${item.quantity} cuốn</span></li>`).join('')}</ul></div><div><span class="admin-order-label">Điểm nhận</span><p>${escapeHtml(order.pickup)}</p></div></div>
+      <footer class="admin-order-card-foot"><div class="admin-order-amount"><small>Tổng tiền sách</small><strong>${money(order.total)}</strong><span>Cọc: <b>Miễn phí</b></span></div><div class="admin-order-controls">${!ended ? `<button class="button primary" type="button" data-order-next="${escapeHtml(order.id)}" data-order-action>${nextOrderText[next]} →</button><form data-order-status-form="${escapeHtml(order.id)}"><label class="visually-hidden" for="status-${escapeHtml(order.id)}">Đổi trạng thái đơn ${escapeHtml(order.id.slice(0, 8))}</label><select id="status-${escapeHtml(order.id)}" name="status" required data-order-action><option value="" selected disabled>Đổi trạng thái...</option>${Object.entries(statusText).filter(([value]) => value !== order.status).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select><button type="submit" data-order-action>Lưu</button></form>` : '<span class="admin-order-locked">Đơn đã kết thúc, không thể đổi trạng thái.</span>'}</div></footer>
     </article>`;
-  }).join('') : '<p class="admin-empty">Chưa có yêu cầu đặt sách.</p>';
+  }).join('') : '<p class="admin-empty">Không có yêu cầu phù hợp bộ lọc.</p>';
   window.eduOrderHolds.updateCountdowns(orderList);
   updateAdminOrderNotice();
 }
@@ -382,16 +427,43 @@ document.querySelector('#restoreBooks')?.addEventListener('click', async (event)
   finally { button.disabled = false; }
 });
 
-orderList?.addEventListener('change', async (event) => {
-  const select = event.target.closest('[data-order-status]');
-  if (!select) return;
-  select.disabled = true;
-  try {
-    await window.eduBackend.setOrderStatus(select.dataset.orderStatus, select.value);
+async function changeOrderStatus(id, status) {
+  const order = adminState.orders.find((item) => item.id === id);
+  if (!order || order.status === status) return;
+  if (['completed', 'cancelled'].includes(order.status) ||
+      (window.eduOrderHolds.isActive(order) && window.eduOrderHolds.remainingMs(order) === 0)) {
+    showAdminMessage('Đơn đã kết thúc hoặc hết thời gian giữ sách. Hãy tải lại danh sách.', true);
     await renderAdminOrders();
-    showAdminMessage('Đã cập nhật trạng thái yêu cầu.');
+    return;
+  }
+  if (status === 'cancelled' && !window.confirm(`Hủy yêu cầu của ${order.contact_name}? Sách sẽ được trả về kho.`)) return;
+  const card = [...orderList.querySelectorAll('[data-order-hold]')].find((item) => item.dataset.orderHold === id);
+  card?.querySelectorAll('[data-order-action]').forEach((control) => { control.disabled = true; });
+  try {
+    await window.eduBackend.setOrderStatus(id, status);
+    await renderAdminOrders();
+    showAdminMessage(`Đã chuyển yêu cầu sang “${statusText[status]}”.`);
   } catch (error) { showAdminMessage(error.message, true); await renderAdminOrders(); }
-  finally { select.disabled = false; }
+}
+
+orderList?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-order-next]');
+  if (button) changeOrderStatus(button.dataset.orderNext, nextOrderStatus[adminState.orders.find((order) => order.id === button.dataset.orderNext)?.status]);
+});
+orderList?.addEventListener('submit', (event) => {
+  const form = event.target.closest('[data-order-status-form]');
+  if (!form) return;
+  event.preventDefault();
+  changeOrderStatus(form.dataset.orderStatusForm, form.elements.status.value);
+});
+document.querySelector('#orderSearch')?.addEventListener('input', (event) => { adminState.orderQuery = event.target.value.trim(); drawAdminOrders(); orderList.scrollTop = 0; });
+document.querySelector('#orderSort')?.addEventListener('change', (event) => { adminState.orderSort = event.target.value; drawAdminOrders(); orderList.scrollTop = 0; });
+document.querySelector('#orderStatusFilters')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-order-filter]');
+  if (!button) return;
+  adminState.orderFilter = button.dataset.orderFilter;
+  drawAdminOrders();
+  orderList.scrollTop = 0;
 });
 
 document.querySelector('#studentList')?.addEventListener('click', async (event) => {

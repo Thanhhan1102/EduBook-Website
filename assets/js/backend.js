@@ -101,9 +101,8 @@
   const placeOrder = async (items, contact, pickup) => {
     const db = await requireClient();
     const { data: holdsReady, error: holdsError } = await db.rpc('book_holds_ready');
-    if (holdsError || !holdsReady) {
-      throw new Error('Hệ thống giữ sách 24 giờ chưa được kích hoạt. Vui lòng báo quản trị viên chạy migration giữ sách trong Supabase.');
-    }
+    if (holdsError) throw new Error('Không kiểm tra được cơ chế giữ sách 24 giờ. Hãy kiểm tra migration 202609250005 và hàm book_holds_ready trong Supabase.');
+    if (!holdsReady) throw new Error('Job Cron giữ sách 24 giờ chưa hoạt động. Hãy kiểm tra Integrations → Cron và job edubook-expire-book-holds trong Supabase.');
     return unwrap(await db.rpc('place_order', {
       p_items: items.map(({ id, mode, quantity }) => ({ id, mode, quantity })),
       p_contact: contact,

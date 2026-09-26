@@ -6,7 +6,7 @@ Link xác nhận email mặc định quay về `https://edubook-iuh.vercel.app/l
 
 ## Thiết lập Supabase
 
-Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, tiếp đến các migration `202609250002_admin_dashboard.sql`, `202609250003_book_covers.sql`, `202609250004_rental_rules_free_deposit.sql`, `202609250005_book_holds.sql` và `202609260001_support_chat.sql`, rồi nạp `supabase/seed.sql`. Migration giữ sách cần Supabase Cron (`pg_cron`). Nếu đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql` trước migration dashboard. Đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
+Làm theo [hướng dẫn từng bước](docs/SUPABASE_SETUP.md). Dự án mới cần chạy `supabase/migrations/202609240001_edubook.sql`, tiếp đến các migration `202609250002_admin_dashboard.sql`, `202609250003_book_covers.sql`, `202609250004_rental_rules_free_deposit.sql`, `202609250005_book_holds.sql`, `202609260001_support_chat.sql` và `202609260002_free_deposit_orders.sql`, rồi nạp `supabase/seed.sql`. Migration giữ sách cần Supabase Cron (`pg_cron`). Nếu đã chạy migration cũ giới hạn email IUH, chạy thêm `supabase/migrations/202609250001_allow_all_emails.sql` trước migration dashboard. Đặt `SUPABASE_PUBLISHABLE_KEY` trong Vercel và redeploy. Đăng ký hỗ trợ email hợp lệ từ nhiều nhà cung cấp bằng mật khẩu; không cần Google OAuth. Không đưa secret key hoặc service role key vào mã nguồn hay frontend.
 
 ## Chạy local
 

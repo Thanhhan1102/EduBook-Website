@@ -21,6 +21,7 @@ grant insert (user_id, sender_role, body) on public.support_messages to authenti
 grant update (read_at) on public.support_messages to authenticated;
 grant usage on sequence public.support_messages_id_seq to authenticated;
 
+drop policy if exists "Students and staff read support messages" on public.support_messages;
 create policy "Students and staff read support messages"
   on public.support_messages for select to authenticated
   using (
@@ -30,6 +31,7 @@ create policy "Students and staff read support messages"
     )) or (select public.is_edubook_staff())
   );
 
+drop policy if exists "Students send their own support messages" on public.support_messages;
 create policy "Students send their own support messages"
   on public.support_messages for insert to authenticated
   with check (
@@ -40,6 +42,7 @@ create policy "Students send their own support messages"
     )
   );
 
+drop policy if exists "Staff reply to student support messages" on public.support_messages;
 create policy "Staff reply to student support messages"
   on public.support_messages for insert to authenticated
   with check (
@@ -49,11 +52,13 @@ create policy "Staff reply to student support messages"
     )
   );
 
+drop policy if exists "Students mark staff replies read" on public.support_messages;
 create policy "Students mark staff replies read"
   on public.support_messages for update to authenticated
   using (user_id = (select auth.uid()) and sender_role = 'staff')
   with check (user_id = (select auth.uid()) and sender_role = 'staff');
 
+drop policy if exists "Staff mark student messages read" on public.support_messages;
 create policy "Staff mark student messages read"
   on public.support_messages for update to authenticated
   using ((select public.is_edubook_staff()) and sender_role = 'student')

@@ -41,7 +41,7 @@
         </section>
       </div>
     </section>
-    <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderNotice" class="hold-notice" role="status" hidden></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
+    <section id="panelOrders" role="tabpanel" aria-labelledby="tabOrders" data-admin-panel="orders" hidden><div class="admin-list-card"><div class="admin-list-head"><div><h2>Yêu cầu đặt sách</h2><p id="adminOrderCount">Đang tải...</p></div></div><div id="adminOrderNotice" class="hold-notice" role="status" hidden></div><div class="admin-order-toolbar"><label for="orderSearch">Tìm yêu cầu<input id="orderSearch" type="search" placeholder="Tên, mã sinh viên, sách hoặc mã đơn" /></label><label for="orderSort">Sắp xếp<select id="orderSort"><option value="newest">Mới nhất</option><option value="oldest">Cũ nhất</option><option value="deadline">Sắp hết hạn</option></select></label></div><div id="orderStatusFilters" class="admin-order-filters" role="group" aria-label="Lọc yêu cầu theo trạng thái"></div><div id="adminOrderList" class="admin-order-list"></div></div></section>
     <section id="panelChats" role="tabpanel" aria-labelledby="tabChats" data-admin-panel="chats" hidden>
       <div class="admin-list-card"><div class="admin-list-head"><div><h2>Trò chuyện hỗ trợ</h2><p>Trao đổi với sinh viên theo từng tài khoản; lịch sử được lưu trong Supabase.</p></div></div>
         <div class="admin-chat-layout">

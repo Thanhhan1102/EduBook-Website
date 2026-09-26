@@ -38,9 +38,8 @@
       if (!remaining) {
         const order = element.closest('[data-order-hold]');
         const status = order?.querySelector('[data-hold-status]');
-        const select = order?.querySelector('[data-order-status]');
-        if (status) status.textContent = 'Đang xử lý hết hạn';
-        if (select) select.disabled = true;
+        if (status) { status.textContent = 'Đang xử lý hết hạn'; status.classList.add('is-expired'); }
+        order?.querySelectorAll('[data-order-action]').forEach((control) => { control.disabled = true; });
       }
     });
   };
