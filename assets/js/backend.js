@@ -103,11 +103,15 @@
     const { data: holdsReady, error: holdsError } = await db.rpc('book_holds_ready');
     if (holdsError) throw new Error('Không kiểm tra được cơ chế giữ sách 24 giờ. Hãy kiểm tra migration 202609250005 và hàm book_holds_ready trong Supabase.');
     if (!holdsReady) throw new Error('Job Cron giữ sách 24 giờ chưa hoạt động. Hãy kiểm tra Integrations → Cron và job edubook-expire-book-holds trong Supabase.');
-    return unwrap(await db.rpc('place_order', {
+    const result = await db.rpc('place_order', {
       p_items: items.map(({ id, mode, quantity }) => ({ id, mode, quantity })),
       p_contact: contact,
       p_pickup: pickup
-    }));
+    });
+    if (result.error?.message?.includes('orders_deposit_free_check')) {
+      throw new Error('Hàm đặt sách trên Supabase còn tính cọc theo bản cũ. Vui lòng báo quản trị viên chạy lại migration 202609250004_rental_rules_free_deposit.sql.');
+    }
+    return unwrap(result);
   };
   const getOrders = async () => {
     const db = await requireClient();

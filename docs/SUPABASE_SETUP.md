@@ -59,4 +59,13 @@ Nếu hàm không tồn tại, Cron chưa được bật, job không có hoặc 
 
 Nếu chạy lại migration chat báo `policy ... already exists`, đó là policy đã tạo từ lần chạy trước, không liên quan đến job giữ sách. Bản mới của [`202609260001_support_chat.sql`](../supabase/migrations/202609260001_support_chat.sql) có thể chạy lại để hoàn tất các policy còn thiếu.
 
+Nếu đặt sách báo `orders_deposit_free_check`, database đã áp dụng ràng buộc cọc miễn phí nhưng hàm `place_order` vẫn là bản cũ tính cọc 20% (hoặc migration đầu đã được chạy lại sau bản miễn cọc). Mở SQL Editor và chạy lại **toàn bộ** [`202609250004_rental_rules_free_deposit.sql`](../supabase/migrations/202609250004_rental_rules_free_deposit.sql); file dùng `create or replace function` và `drop trigger if exists` nên có thể chạy lại. Không cần gỡ ràng buộc miễn cọc. Sau đó kiểm tra:
+
+```sql
+select pg_get_functiondef('public.place_order(jsonb,jsonb,text)'::regprocedure)
+       like '%v_deposit := 0;%' as free_deposit_function;
+```
+
+Kết quả phải là `true`. Nếu `false`, đảm bảo bạn chạy cả file trên đúng project Supabase, không chỉ một phần SQL được chọn trong editor. Thử đặt lại sau khi hàm đã cập nhật; không cần thêm cọc vào tổng tiền sách.
+
 Nếu link xác nhận đưa về `http://localhost:3000` hoặc báo `otp_expired`, sửa Site URL/Redirect URL như bước 4, rồi dùng **Gửi lại email xác nhận** trên trang đăng ký hoặc đăng nhập. Link cũ đã hết hạn hoặc đã dùng không thể tái sử dụng; chỉ mở link trong email mới nhất. Trang đăng nhập hiển thị kết quả xác nhận và cho phép gửi lại link khi gặp lỗi.
