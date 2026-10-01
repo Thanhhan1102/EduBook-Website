@@ -4,7 +4,7 @@ Website demo để sinh viên tìm, đặt mua hoặc thuê giáo trình theo h�
 
 | Thông tin | Giá trị |
 | --- | --- |
-| Bản tài liệu | 29/09/2026 |
+| Bản tài liệu | 01/10/2026 |
 | Website | [edubook-iuh.vercel.app](https://edubook-iuh.vercel.app/) |
 | Mã nguồn | [Thanhhan1102/EduBook-Website](https://github.com/Thanhhan1102/EduBook-Website) · nhánh `main` |
 | Supabase project | `jhhpygtddakqcdjthuxq` · [Dashboard](https://supabase.com/dashboard/project/jhhpygtddakqcdjthuxq) |
@@ -63,9 +63,9 @@ Chat lưu lịch sử theo tài khoản trong `support_messages`, làm mới kho
 
 ## Dữ liệu mẫu và hình ảnh
 
-`assets/js/book-store.js` chứa **47 sách mẫu** thuộc 14 khoa. `supabase/seed.sql` nạp chúng vào `books` và có thể chạy lại mà không ghi đè sách/tồn kho đã tồn tại. Sau khi sửa dữ liệu mẫu, chạy `node scripts/generate-seed.cjs` để tạo lại SQL. Nút **Bổ sung sách mẫu** trong dashboard chỉ thêm những ID còn thiếu.
+`assets/js/book-store.js` chứa **47 sách mẫu** thuộc 15 khoa. `supabase/seed.sql` nạp chúng vào `books` và có thể chạy lại mà không ghi đè sách/tồn kho đã tồn tại. Sau khi sửa dữ liệu mẫu, chạy `node scripts/generate-seed.cjs` để tạo lại SQL. Nút **Bổ sung sách mẫu** trong dashboard chỉ thêm những ID còn thiếu.
 
-Danh sách khoa: Công nghệ thông tin; Công nghệ Điện; Công nghệ Điện tử; Công nghệ Động lực; Công nghệ Nhiệt - Lạnh; Công nghệ May - Thời trang; Công nghệ Hóa học; Khoa học Cơ bản; Luật và Khoa học chính trị; Ngoại ngữ; Quản trị Kinh doanh; Thương mại - Du lịch; Kỹ thuật Xây dựng; Khoa học Sức khỏe. Tên hiển thị trong UI có tiền tố “Khoa”.
+Danh sách khoa: Công nghệ thông tin; Công nghệ Điện; Công nghệ Điện tử; Công nghệ Động lực; Công nghệ Nhiệt - Lạnh; Công nghệ May - Thời trang; Công nghệ Hóa học; Khoa học Cơ bản; Luật và Khoa học chính trị; Ngoại ngữ; Quản trị Kinh doanh; Tài chính - Kế toán; Thương mại - Du lịch; Kỹ thuật Xây dựng; Khoa học Sức khỏe. Tên hiển thị trong UI có tiền tố “Khoa”.
 
 Ảnh bìa tải từ máy nằm trong Supabase Storage bucket công khai `book-covers` (JPG/PNG/WebP, tối đa 5 MB). Bảng `books` chỉ lưu `image_url`; cũng có thể dùng URL ảnh bên ngoài. Các sách mẫu dùng một số ảnh từ prototype và Unsplash, nên cần kiểm tra quyền sử dụng/độ chính xác trước khi vận hành thật. Logo ở `assets/images/LOGO-transparent.png`. Ảnh QR truy cập website ở [`assets/images/edubook-website-qr.png`](assets/images/edubook-website-qr.png); tạo lại bằng `python scripts/generate-qr.py` sau khi cài `Pillow` và `qrcode`.
 
@@ -87,6 +87,7 @@ Danh sách khoa: Công nghệ thông tin; Công nghệ Điện; Công nghệ Đi
 | 5 | `202609250005_book_holds.sql` | Cột hạn giữ, hủy/hoàn kho và Cron 24 giờ. |
 | 6 | `202609260001_support_chat.sql` | Bảng, RLS và danh sách chat hỗ trợ. |
 | 7 | `202609260002_free_deposit_orders.sql` | Đưa cọc cũ về 0 và ràng buộc cọc miễn phí. |
+| 8 | `202610010001_finance_accounting_faculty.sql` | Chuyển hai sách kế toán mẫu sang Khoa Tài chính - Kế toán trên database đã có dữ liệu. |
 
 **Không chạy lại migration nền `202609240001` trên database đang vận hành**: nó chứa phiên bản đầu của `place_order` tính cọc 20%, có thể ghi đè hàm mới. Nếu gặp lỗi `orders_deposit_free_check`, chạy lại toàn bộ `202609250004_rental_rules_free_deposit.sql`. Hướng dẫn SQL và xử lý lỗi chi tiết ở [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md).
 

@@ -52,7 +52,7 @@
     ['en202', 'Tiếng Anh Học Thuật', 'EN202', 'Khoa Ngoại ngữ', 'Kỹ năng đọc, viết và trình bày trong môi trường đại học.'],
     ['jp101', 'Tiếng Nhật Sơ Cấp 1', 'JP101', 'Khoa Ngoại ngữ', 'Từ vựng, ngữ pháp và hội thoại tiếng Nhật nhập môn.'],
     ['qt203', 'Quản Trị Học', 'QT203', 'Khoa Quản trị Kinh doanh', 'Chức năng quản trị và ra quyết định trong tổ chức.'],
-    ['kt204', 'Kế Toán Tài Chính', 'KT204', 'Khoa Quản trị Kinh doanh', 'Ghi nhận nghiệp vụ và lập báo cáo tài chính cơ bản.'],
+    ['kt204', 'Kế Toán Tài Chính', 'KT204', 'Khoa Tài chính - Kế toán', 'Ghi nhận nghiệp vụ và lập báo cáo tài chính cơ bản.'],
     ['dl301', 'Quản Trị Du Lịch', 'DL301', 'Khoa Thương mại - Du lịch', 'Thiết kế sản phẩm và điều hành dịch vụ du lịch.'],
     ['tm202', 'Thương Mại Điện Tử', 'TM202', 'Khoa Thương mại - Du lịch', 'Mô hình kinh doanh và vận hành kênh thương mại điện tử.'],
     ['xd201', 'Sức Bền Vật Liệu', 'XD201', 'Khoa Kỹ thuật Xây dựng', 'Ứng suất, biến dạng và kiểm tra kết cấu cơ bản.'],
@@ -74,7 +74,7 @@
   const clone = (items) => JSON.parse(JSON.stringify(items));
   const facultyMap = {
     'CNTT': 'Khoa Công nghệ thông tin',
-    'Kế toán': 'Khoa Quản trị Kinh doanh',
+    'Kế toán': 'Khoa Tài chính - Kế toán',
     'Đại cương': 'Khoa Khoa học Cơ bản',
     'Điện – Điện tử': 'Khoa Công nghệ Điện tử',
     'Quản trị kinh doanh': 'Khoa Quản trị Kinh doanh',
