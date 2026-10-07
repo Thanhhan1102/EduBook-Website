@@ -4,7 +4,7 @@ Website demo để sinh viên tìm, đặt mua hoặc thuê giáo trình theo h�
 
 | Thông tin | Giá trị |
 | --- | --- |
-| Bản tài liệu | 01/10/2026 |
+| Bản tài liệu | 07/10/2026 · chốt bản demo để lưu trữ |
 | Website | [edubook-iuh.vercel.app](https://edubook-iuh.vercel.app/) |
 | Mã nguồn | [Thanhhan1102/EduBook-Website](https://github.com/Thanhhan1102/EduBook-Website) · nhánh `main` |
 | Supabase project | `jhhpygtddakqcdjthuxq` · [Dashboard](https://supabase.com/dashboard/project/jhhpygtddakqcdjthuxq) |
@@ -139,5 +139,7 @@ Repo hiện không có test suite hoặc pipeline build tự động; các bư�
 Giỏ hàng hiện nằm trong bộ nhớ của trang nên sẽ mất khi tải lại. Supabase JS, Google Fonts và nhiều ảnh sách mẫu được tải từ dịch vụ ngoài; bản lưu Git không bảo đảm hiển thị đầy đủ khi offline. Sản phẩm chưa có thanh toán online, gửi email/push sau khi đặt, hoặc đồng bộ chat realtime.
 
 ## Khi lưu trữ hoặc khôi phục
+
+Phiên bản chốt mã nguồn được đánh dấu bằng Git tag `archive-2026-10-07`. Hướng dẫn mở bản ZIP, khôi phục lịch sử Git và danh sách backup dịch vụ còn cần bổ sung nằm trong [docs/ARCHIVE.md](docs/ARCHIVE.md).
 
 Git chỉ lưu **mã nguồn, migrations, seed và asset đã commit**. Git **không** chứa dữ liệu sinh viên/đơn/chat đang chạy trong Supabase, Supabase Auth users, tệp trong Storage, Cron runtime state, biến môi trường Vercel, cấu hình domain/redirect hoặc `note.md`. Nếu cần bản lưu trữ có thể khôi phục đầy đủ, xuất/ghi lại riêng các phần này bằng phương thức an toàn của từng dịch vụ, rồi cất cùng thông tin phiên bản commit. Không đưa backup dữ liệu cá nhân hoặc secret key vào repository công khai.
